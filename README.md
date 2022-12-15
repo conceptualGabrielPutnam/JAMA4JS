@@ -25,7 +25,7 @@ The author of this conversion used the following tools to aid the conversion to 
 - (JSCompress) https://jscompress.com/
 
 ### Functionality
-The Javascript release should be functionally similar to the original Java release of JAMA, except that due to Javascript limitations cannot read disk files.  All print and output have been redirected to the console log.
+The Javascript release should be functionally similar to the original Java release of JAMA, except that due to Javascript limitations cannot read disk files.  All print and output have been redirected to the console log.  A test program, JAMA_Test.js is included in the test/ directory or with the JAMAwTest.js files that tests the operations for mathematical correctness, and has been shown to work in Javascript with zero errors. (See JAMA_Test.html)
 
 ### Code Structure
 The initial commit contains three main parts.  All parts are availble as original translation, Babel prettify/shrink, and JSCompress minify forms.
