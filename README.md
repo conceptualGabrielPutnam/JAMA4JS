@@ -1,7 +1,7 @@
 # JAMA4JS
 The JAMA Linear Algebra package translated for use with Javascript
 
-This repository represents a conversion of the JAMA linear algebra library for use with Javascript due to a noticable lack of linear algebra availability.
+This repository represents a conversion of the JAMA linear algebra library for use with Javascript.
 
 ### Translation Source
 The initial commit of this library was created from the JAMA archive located at:
