@@ -5,10 +5,10 @@ This repository represents a conversion of the JAMA linear algebra library for u
 
 ### Translation Source
 The initial commit of this library was created from the JAMA archive located at:
-https://math.nist.gov/javanumerics/jama/
+- https://math.nist.gov/javanumerics/jama/
 
 The initial commit used ver 1.0.3 found at:
-https://math.nist.gov/javanumerics/jama/Jama-1.0.3.zip
+- https://math.nist.gov/javanumerics/jama/Jama-1.0.3.zip
 
 ### Original JAMA Release Info
 Per the wording at the NIST site for JAMA:
