@@ -20,9 +20,9 @@ The original release of JAMA (from 1998, in Java) was created by:
 > Ronald F. Boisvert, Bruce Miller, Roldan Pozo, Karin Remington ... from NIST
 
 The author of this conversion used the following tools to aid the conversion to Javascript:
-(JSweet) https://www.jsweet.org/jsweet-live-sandbox/
-(Babel) https://babeljs.io/repl
-(JSCompress) https://jscompress.com/
+- (JSweet) https://www.jsweet.org/jsweet-live-sandbox/
+- (Babel) https://babeljs.io/repl
+- (JSCompress) https://jscompress.com/
 
 ### Functionality
 The Javascript release should be functionally similar to the original Java release of JAMA, except that due to Javascript limitations cannot read disk files.  All print and output have been redirected to the console log.
