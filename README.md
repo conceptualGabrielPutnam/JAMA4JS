@@ -39,3 +39,37 @@ The initial commit contains three main parts.  All parts are availble as origina
   - Found solitary in example/JAMA_Example.js, JAMA_Example_Babel.js, JAMA_Example.min.js
   
 An additional (extremely simple) webpage JAMA_Test.html has been included to demonstrate magic square example functionality and test completion.
+
+### Summary of Capabilities (from NIST)
+- Object Manipulation
+  - constructors
+  - set elements
+  - get elements
+  - copy
+  - clone
+- Elementary Operations
+  - addition
+  - subtraction
+  - multiplication
+  - scalar multiplication
+  - element-wise multiplication
+  - element-wise division
+  - unary minus
+  - transpose
+  - norm
+- Decompositions
+  - Cholesky
+  - LU
+  - QR
+  - SVD
+  - symmetric eigenvalue
+  - nonsymmetric eigenvalue
+- Equation Solution
+  - nonsingular systems
+  - least squares
+- Derived Quantities
+  - condition number
+  - determinant
+  - rank
+  - inverse
+  - pseudoinverse
