@@ -3,14 +3,14 @@ The JAMA Linear Algebra package translated for use with Javascript
 
 This repository represents a conversion of the JAMA linear algebra library for use with Javascript due to a noticable lack of linear algebra availability.
 
-# Translation Source
+### Translation Source
 The initial commit of this library was created from the JAMA archive located at:
 https://math.nist.gov/javanumerics/jama/
 
 The initial commit used ver 1.0.3 found at:
 https://math.nist.gov/javanumerics/jama/Jama-1.0.3.zip
 
-# Original JAMA Release Info
+### Original JAMA Release Info
 Per the wording at the NIST site for JAMA:
 > Copyright Notice
 > This software is a cooperative product of The MathWorks and the National Institute of Standards and Technology (NIST) which has been released to the public domain. Neither The MathWorks nor NIST assumes any responsibility whatsoever for its use by other parties, and makes no guarantees, expressed or implied, about its quality, reliability, or any other characteristic.
