@@ -73,3 +73,18 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
   - rank
   - inverse
   - pseudoinverse
+  
+## Edit 12/21/2022
+
+- Got rid of _Babel subfiles due to complexity and lack of necessity or obvious benefit over simply hosting _Babel translations as main files.
+- Got rid of JAMAwTest and JAMAwTestAndExample catgories, as interested users can simply load:
+  - JAMA.js
+  - test/JAMA_Test.js
+  - example/JAMA_Example.js
+- Added leastsquares/JAMA_LeastSquares.js with accompanying minified version
+  - Provides condensed Least Squares calculation functions for a range of common tasks
+    - Line, Parabola, Polynomial, Sin/Cos/SinCos(linear freq steps), Sin/Cos/SinCos(exponential freq steps), Ellipticals (Conic sections)
+  - Initialize with: var ls = LeastSquares( x, y )
+  - Run a calculation with: ls.line(), ls.parab(), ls.poly( 5 ), ls.sinCosLinFreq( 3 ), ls.ellipseGen(), ls.ellipseGen( ep, 0 ), or others.
+  - A few such as ls.pow(), and ls.log() are still in the works due to non-linear calculation needs.
+  - Updated the test webpage to include Test, Example, and Least Squares, as well as a visual graph example. (needs Google Charts loader.js)
