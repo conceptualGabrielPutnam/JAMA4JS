@@ -84,7 +84,7 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 - Added leastsquares/JAMA_LeastSquares.js with accompanying minified version
   - Provides condensed Least Squares calculation functions for a range of common tasks
     - Line, Parabola, Polynomial, Sin/Cos/SinCos(linear freq steps), Sin/Cos/SinCos(exponential freq steps), Ellipticals (Conic sections)
-  - Initialize with: var ls = LeastSquares( x, y )
+  - Initialize with: var ls = new LeastSquares( x, y )
   - Run a calculation with: ls.line(), ls.parab(), ls.poly( 5 ), ls.sinCosLinFreq( 3 ), ls.ellipseGen(), ls.ellipseGen( ep, 0 ), or others.
   - A few such as ls.pow(), and ls.log() are still in the works due to non-linear calculation needs.
 - Updated the test webpage to include Test, Example, and Least Squares, as well as a visual graph example. (needs Google Charts loader.js)
