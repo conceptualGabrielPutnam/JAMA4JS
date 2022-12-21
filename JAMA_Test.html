@@ -1,16 +1,291 @@
 <html>
     <head>
-         <script src="JAMAwTestAndExample.min.js"></script>
-         <script>
+        <script src="JAMA.min.js"></script>
+        <script src="test/JAMA_Test.min.js"></script>
+        <script src="example/JAMA_Example.min.js"></script>
+        <script src="leastsquares/JAMA_LeastSquares.js"></script>
+        <script src="loader.js"></script>
+        <script>
             function testJAMA(){
                 TestMatrix.runJAMATest();
+            }
+            function runMagicSquareExample(){
                 MagicSquareExample.runExample();
             }
-         </script>
+            function runLeastSquaresTest(){
+                LeastSquares.runLeastSquaresTest();
+            }
+            
+            function calcAllEllipses(){
+                scatterData = [ [ 'X', 'Y', 'ellipseYA', 'ellipseYB', 'ellipseYC', 'ellipseYD', 'ellipseYE', 'ellipseYF' ] ];
+                for( var i = 0; i < xElp.length; i++ ){
+                    xElp[i] = data.getValue( i, 0 );
+                    yElp[i] = data.getValue( i, 1 );
+                    scatterData.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
+                }
+                
+                ellipseData  = [];
+                var segments = 50;
+                var incr     = Math.PI/segments*2;
+                var paramAng = 0;
+                
+                var lsElp = new LeastSquares( xElp, yElp );
+                var ep = {};
+                res = lsElp.ellipseGen( ep, 0 );
+                paramAng = 0;
+                var atcosth  = ep.a_r*Math.cos(ep.theta);
+                var atsinth  = ep.a_r*Math.sin(ep.theta);
+                var btcosth  = ep.b_r*Math.cos(ep.theta);
+                var btsinth  = ep.b_r*Math.sin(ep.theta);
+                for( var i = 0; i <= segments; i++ ){
+                    var ellipseX = ep.x_c + ( atcosth*Math.cos(paramAng) - btsinth*Math.sin(paramAng) );
+                    var ellipseY = ep.y_c + ( atsinth*Math.cos(paramAng) + btcosth*Math.sin(paramAng) );
+                    ellipseData.push( [ ellipseX, null, ellipseY, null, null, null, null, null ] );
+                    paramAng += incr;
+                }
+                
+                ep = {};
+                res = lsElp.ellipseGen( ep, 1 );
+                paramAng = 0;
+                var atcosth  = ep.a_r*Math.cos(ep.theta);
+                var atsinth  = ep.a_r*Math.sin(ep.theta);
+                var btcosth  = ep.b_r*Math.cos(ep.theta);
+                var btsinth  = ep.b_r*Math.sin(ep.theta);
+                for( var i = 0; i <= segments; i++ ){
+                    var ellipseX = ep.x_c + ( atcosth*Math.cos(paramAng) - btsinth*Math.sin(paramAng) );
+                    var ellipseY = ep.y_c + ( atsinth*Math.cos(paramAng) + btcosth*Math.sin(paramAng) );
+                    ellipseData.push( [ ellipseX, null, null, ellipseY, null, null, null, null ] );
+                    paramAng += incr;
+                }
+                
+                ep = {};
+                res = lsElp.ellipseGen( ep, 2 );
+                paramAng = 0;
+                var atcosth  = ep.a_r*Math.cos(ep.theta);
+                var atsinth  = ep.a_r*Math.sin(ep.theta);
+                var btcosth  = ep.b_r*Math.cos(ep.theta);
+                var btsinth  = ep.b_r*Math.sin(ep.theta);
+                for( var i = 0; i <= segments; i++ ){
+                    var ellipseX = ep.x_c + ( atcosth*Math.cos(paramAng) - btsinth*Math.sin(paramAng) );
+                    var ellipseY = ep.y_c + ( atsinth*Math.cos(paramAng) + btcosth*Math.sin(paramAng) );
+                    ellipseData.push( [ ellipseX, null, null, null, ellipseY, null, null, null ] );
+                    paramAng += incr;
+                }
+                
+                ep = {};
+                res = lsElp.ellipseGen( ep, 3 );
+                paramAng = 0;
+                var atcosth  = ep.a_r*Math.cos(ep.theta);
+                var atsinth  = ep.a_r*Math.sin(ep.theta);
+                var btcosth  = ep.b_r*Math.cos(ep.theta);
+                var btsinth  = ep.b_r*Math.sin(ep.theta);
+                for( var i = 0; i <= segments; i++ ){
+                    var ellipseX = ep.x_c + ( atcosth*Math.cos(paramAng) - btsinth*Math.sin(paramAng) );
+                    var ellipseY = ep.y_c + ( atsinth*Math.cos(paramAng) + btcosth*Math.sin(paramAng) );
+                    ellipseData.push( [ ellipseX, null, null, null, null, ellipseY, null, null ] );
+                    paramAng += incr;
+                }
+                
+                ep = {};
+                res = lsElp.ellipseGen( ep, 4 );
+                paramAng = 0;
+                var atcosth  = ep.a_r*Math.cos(ep.theta);
+                var atsinth  = ep.a_r*Math.sin(ep.theta);
+                var btcosth  = ep.b_r*Math.cos(ep.theta);
+                var btsinth  = ep.b_r*Math.sin(ep.theta);
+                for( var i = 0; i <= segments; i++ ){
+                    var ellipseX = ep.x_c + ( atcosth*Math.cos(paramAng) - btsinth*Math.sin(paramAng) );
+                    var ellipseY = ep.y_c + ( atsinth*Math.cos(paramAng) + btcosth*Math.sin(paramAng) );
+                    ellipseData.push( [ ellipseX, null, null, null, null, null, ellipseY, null ] );
+                    paramAng += incr;
+                }
+                
+                ep = {};
+                res = lsElp.ellipseGen( ep, 5 );
+                paramAng = 0;
+                var atcosth  = ep.a_r*Math.cos(ep.theta);
+                var atsinth  = ep.a_r*Math.sin(ep.theta);
+                var btcosth  = ep.b_r*Math.cos(ep.theta);
+                var btsinth  = ep.b_r*Math.sin(ep.theta);
+                for( var i = 0; i <= segments; i++ ){
+                    var ellipseX = ep.x_c + ( atcosth*Math.cos(paramAng) - btsinth*Math.sin(paramAng) );
+                    var ellipseY = ep.y_c + ( atsinth*Math.cos(paramAng) + btcosth*Math.sin(paramAng) );
+                    ellipseData.push( [ ellipseX, null, null, null, null, null, null, ellipseY ] );
+                    paramAng += incr;
+                }
+                combinedData = scatterData.concat( ellipseData );
+                data = google.visualization.arrayToDataTable( combinedData );
+                myScatterChart.setDataTable( data );
+                drawChart();
+            }
+        </script>
+        <script>
+            google.charts.load('current', {'packages':['corechart']});
+            google.charts.setOnLoadCallback( initChart );
+            
+            var myScatterChart;
+            var selectedPoint = null;
+            var spXst = null;
+            var spYst = null;
+            
+            var xElp = [];
+            var yElp = [];
+            
+            var scatterData = [ [ 'X', 'Y', 'ellipseYA', 'ellipseYB', 'ellipseYC', 'ellipseYD', 'ellipseYE', 'ellipseYF' ] ];
+            for( var i = 0; i < 30; i++ ){
+                xElp[i] = ( Math.random() - 0.5 ) * 5;
+                yElp[i] = ( Math.random() - 0.5 ) * 5;
+                scatterData.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
+            }
+            
+            var ellipseData = [
+                [ 0, null, 0,    null, null, null, null, null ],
+                [ 0, null, null, 0,    null, null, null, null ],
+                [ 0, null, null, null, 0,    null, null, null ],
+                [ 0, null, null, null, null, 0,    null, null ],
+                [ 0, null, null, null, null, null, 0,    null ],
+                [ 0, null, null, null, null, null, null, 0    ]
+            ];
+            
+            var combinedData = scatterData.concat( ellipseData );
+            
+            var data;
+            
+            var options = {
+                title: 'X vs Y Ellipse Least Square Fit',
+                hAxis: {
+                  title: 'X',
+                  viewWindow:{
+                      max:5,
+                      min:-5
+                  }
+                },
+                vAxis: {
+                  title: 'Y',
+                  viewWindow:{
+                      max:5,
+                      min:-5
+                  }
+                },
+                seriesType: 'scatter',
+                series: {
+                  1: { type: 'line' },
+                  2: { type: 'line' },
+                  3: { type: 'line' },
+                  4: { type: 'line' },
+                  5: { type: 'line' },
+                  6: { type: 'line' }
+                },
+                legend: 'none'
+            };
+            
+            function initChart(){
+                data = google.visualization.arrayToDataTable( combinedData );
+                
+                myScatterChart = new google.visualization.ChartWrapper({
+                    chartType:   'ComboChart',
+                    containerId: 'exampleChart',
+                    dataTable:   data,
+                    options:     options
+                });
+                
+                document.getElementById("exampleChart").addEventListener( "mousemove", mouseMoveScript );
+                document.getElementById("exampleChart").addEventListener( "mousedown", mouseDownScript );
+                document.getElementById("exampleChart").addEventListener( "mouseup", mouseUpScript );
+                
+                drawChart();
+                calcAllEllipses();
+            }
+
+            function drawChart() {
+                myScatterChart.draw();
+            }
+            
+            function selectPoints( mx, my ) {
+                var chartLayout    = myScatterChart.getChart().getChartLayoutInterface();
+                var chartContainer = document.getElementById( myScatterChart.getContainerId() );
+                var chartBounds    = chartContainer.getBoundingClientRect();
+                if ( ( ( (chartBounds.left + window.pageXOffset) <= mx ) && ( (chartBounds.left + chartBounds.width  + window.pageXOffset) >= mx ) ) &&
+                     ( ( (chartBounds.top  + window.pageYOffset) <= my ) && ( (chartBounds.top  + chartBounds.height + window.pageYOffset) >= my ) ) ){
+                    var selection = [];
+                    var dataTable = myScatterChart.getDataTable();
+                    for (var row = 0; row < dataTable.getNumberOfRows(); row++) {
+                        for (var col = 1; col < dataTable.getNumberOfColumns(); col++) {
+                            var point = chartLayout.getBoundingBox('point#' + (col - 1) + '#' + row);
+                            if( point != null ){
+                                if ((((chartBounds.left + point.left) >= (mx - point.width)) &&
+                                     ((chartBounds.left + point.left + point.width) <= (mx + point.width))) &&
+                                    (((chartBounds.top + point.top) >= (my - point.height)) &&
+                                     ((chartBounds.top + point.top + point.height) <= (my + point.height)))) {
+                                  selection.push({row: row, column: col});
+                                }
+                            }
+                        }
+                    }
+                
+                    if( selection.length > 0 ){
+                        var item = selection[0];
+                        selectedPoint = selection[0];
+                    } else {
+                        selectedPoint = null;
+                    }
+                    
+                    myScatterChart.getChart().setSelection( selection );
+                }
+            }
+            
+            function mouseMoveScript( e ){
+                var x = e.clientX;
+                var y = e.clientY;
+                var coor = "Coordinates: (" + x + "," + y + ")";
+                document.getElementById("output").innerHTML = coor;
+                if( selectedPoint != null ){
+                    var chartContainer  = document.getElementById( myScatterChart.getContainerId() );
+                    var chartBounds    = chartContainer.getBoundingClientRect();
+                    var chartLayout     = myScatterChart.getChart().getChartLayoutInterface()
+                    var chartAreaBounds = chartLayout.getChartAreaBoundingBox();
+                    var chartMinX       = chartLayout.getHAxisValue( chartAreaBounds.left );
+                    var chartMaxX       = chartLayout.getHAxisValue( chartAreaBounds.left + chartAreaBounds.width );
+                    var chartMinY       = chartLayout.getVAxisValue( chartAreaBounds.top + chartAreaBounds.height );
+                    var chartMaxY       = chartLayout.getVAxisValue( chartAreaBounds.top );
+                    
+                    var dataTable = myScatterChart.getDataTable();
+                    var spX = ( x - chartBounds.left - chartAreaBounds.left ) / chartAreaBounds.width  * ( chartMaxX - chartMinX ) + chartMinX;
+                    var spY = ( chartAreaBounds.height - ( y - chartBounds.top  - chartAreaBounds.top ) ) / chartAreaBounds.height * ( chartMaxY - chartMinY ) + chartMinY;
+                    dataTable.setValue( selectedPoint.row, 0, spX );
+                    dataTable.setValue( selectedPoint.row, selectedPoint.column, spY );
+                    calcAllEllipses();
+                }
+            }
+            
+            function mouseDownScript( e ){
+                var mx = e.clientX;
+                var my = e.clientY;
+                
+                if( e.target ){
+                    targ = e.target;
+                    selectPoints( mx, my );
+                } else if (e.srcElement) {
+                    targ = e.srcElement;
+                }
+                var tname;
+                tname = targ.tagName;
+            }
+            
+            function mouseUpScript( e ){
+                if( selectedPoint != null ){
+                    selectedPoint = null;
+                }
+            }
+        </script>
     </head>
     <body>
         <button onclick="testJAMA()">Test JAMA Functionality</button> 
-        <div id="output">
+        <button onclick="runMagicSquareExample()">Run Magic Squares Example</button> 
+        <button onclick="runLeastSquaresTest()">Run Least Squares Test</button> 
+        <div id="output"></div>
+        <div>
+            <div id="exampleChart"  style="width: 900px; height: 500px;"></div>
         </div>
     </body>
 </html>
