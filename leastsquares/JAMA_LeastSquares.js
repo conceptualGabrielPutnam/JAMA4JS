@@ -103,14 +103,42 @@ var LeastSquares = /** @class */ (function () {
     * General purpose of the method
     * @return Return values
     */
-    LeastSquares.prototype.pow = function (){  
+    LeastSquares.prototype.powLin = function (){
+        var A = [];
+        var B = [];
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            B[i] = [];
+            B[i][0] = Math.log( this.y[i] );
+            A[i][0] = Math.log( this.x[i] );
+            A[i][1] = 1;
+        }
+        A = new Matrix( A );
+        B = new Matrix( B );
+        var res = A.solve(B);
+        res.A[1][0] = Math.exp( res.A[1][0] );
+        return res;
     };
     
     /**
     * General purpose of the method
     * @return Return values
     */
-    LeastSquares.prototype.exp = function (){
+    LeastSquares.prototype.expLin = function (){
+        var A = [];
+        var B = [];
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            B[i] = [];
+            B[i][0] = Math.log( this.y[i] );
+            A[i][0] = this.x[i];
+            A[i][1] = 1;
+        }
+        A = new Matrix( A );
+        B = new Matrix( B );
+        var res = A.solve(B);
+        res.A[1][0] = Math.exp( res.A[1][0] );
+        return res;
     };
     
     /**
@@ -534,6 +562,9 @@ var LeastSquares = /** @class */ (function () {
         console.log( "8th degree poly fit" );
         res = ls.poly(8);
         res.print( 5, 3 );
+        console.log( "Logarithmic fit" );
+        res = ls.log();
+        res.print( 5, 3 );
         console.log( "3rd degree exp freq sin fit (10Hz start freq)" );
         res = ls.sinExpFreq( 3, 10, 2 );
         res.print( 5, 3 );
@@ -559,6 +590,16 @@ var LeastSquares = /** @class */ (function () {
         res.print( 5, 3 );
         console.log( "3rd degree linear freq sin-cos fit" );
         res = lsSC.sinCosLinFreq(3);
+        res.print( 5, 3 );
+        
+        var xExp = [ 1.006, 1.666, 3.418, 3.605, 4.562, 6.166, 7.331, 7.642, 8.745, 9.971, 10.924, 11.702, 12.802, 14.339, 14.901 ];
+        var yExp = [ 0.853, 1.625, 5.326, 4.168, 9.873, 14.529, 21.579, 25.018, 33.839, 45.783, 59.037, 76.580, 94.795, 123.343, 161.893 ];
+        console.log( "Exponential fit (Linear LS)" );
+        var lsExp = new LeastSquares( xExp, yExp );
+        res = lsExp.expLin();
+        res.print( 5, 3 );
+        console.log( "Power law fit (Linear LS)" );
+        res = lsExp.powLin();
         res.print( 5, 3 );
 
         console.log( "Elliptical Fits" );
