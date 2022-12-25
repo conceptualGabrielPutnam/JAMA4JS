@@ -91,13 +91,13 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 - Updated the test webpage to include Test, Example, and Least Squares, as well as a visual graph example. (needs Google Charts loader.js)
 
 ### Example of Ellipse Least Squares Fitting
-![EllipseFit](https://imgur.com/4fczGnj)
+![EllipseFit](https://i.imgur.com/4fczGnjm.png)
 - Included as example in the JAMA_Test.html
 - Shows curve fitting for six different ellipse fits based on preference of choice for independent variable
 - F, or constant, as the independent is by far the most stable fit
 - In the example, points can be dragged to visualize how the curve fit changes
 ### Example of SinCos Least Squares Fitting
-![SinCosFit](https://imgur.com/NiApkDL)
+![SinCosFit](https://i.imgur.com/NiApkDLm.png)
 - Included as example in the JAMA_Test.html
 - Shows curve fitting for A*sin(f*x) + B*cos(f*x) functions
   - Linear and exponential frequency increase with terms
@@ -110,11 +110,11 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
   - Uses Plotly CDN request for 3D plotting
 - Made the 2D curve fitting examples all interactive so you can watch how the curve fits change
 ### Example of 3D Line and Plane Least Squares Fitting
-![LinePlane3D](https://imgur.com/r9YzJLx)
+![LinePlane3D](https://i.imgur.com/r9YzJLxm.png)
 - Included as example in the JAMA_Test.html
 - Shows curve fitting for a 3D line and 3D plane with scatter data (obvious skew to check for alignment)
 ### Example of 3D Polynomial Least Squares Fitting
-![Poly3D](https://imgur.com/sJsEySZ)
+![Poly3D](https://i.imgur.com/sJsEySZm.png)
 - Included as example in the JAMA_Test.html
 - Shows curve fitting for poly(5,2)
   - f(C, x, xx, xxx, xxxx, xxxxx, xxxxy, xxxy, xxxyy, xxy, xxyy, xy xyy, y, yy)
