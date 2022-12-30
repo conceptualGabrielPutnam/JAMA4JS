@@ -121,7 +121,7 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 ## Edit 12/30/2022
 - Added the ability for 3D LeastSquares sphere fits to 3D data
 - Updated JAMA_Test.html with 3D sphere fit example
-- Update LeastSquares files with 3D sphere fitting
+- Updated LeastSquares files with 3D sphere fitting
 ### Example of 3D Polynomial Least Squares Fitting
 ![Sphere3D](https://i.imgur.com/AWKZPepm.png)
 - Included as example in the JAMA_Test.html
