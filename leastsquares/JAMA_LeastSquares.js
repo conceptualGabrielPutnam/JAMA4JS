@@ -12,12 +12,13 @@ var LeastSquares = /** @class */ (function () {
     * Basic constructor
     * @return Return values
     */
-    function LeastSquares( x, y ){
+    function LeastSquares( x, y, z=null ){
         if( x.length != y.length ){
             console.log( "arrays must be the same length" );
         }
         this.x = x;
         this.y = y;
+        this.z = z;
     }
     
     /**
@@ -38,6 +39,58 @@ var LeastSquares = /** @class */ (function () {
         B = new Matrix( B );
         return A.solve(B);
     };
+    
+    /**
+    * General purpose of the method
+    * @return Return values
+    */
+    LeastSquares.prototype.line3D = function(){
+        // First find the average of the points
+        var avg = [];
+        avg[0] = eval(this.x.join('+'))/this.x.length;
+        avg[1] = eval(this.y.join('+'))/this.y.length;
+        avg[2] = eval(this.z.join('+'))/this.z.length;
+        
+        // Then take the singular value decomposition of the points minus the average
+        var A = [];
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            A[i][0] = this.x[i] - avg[0];
+            A[i][1] = this.y[i] - avg[1];
+            A[i][2] = this.z[i] - avg[2];
+        }
+        A = new Matrix( A );
+        var res = A.svd();
+        //console.log( res.s );
+        console.log( res.V );
+        var out = [];
+        for( var i = 0; i < 3; i++ ){
+            out[i] = [];
+            out[i][0] = avg[i];
+            out[i][1] = res.V[i][0];
+        }
+        return new Matrix( out );
+    }
+    
+    /**
+    * General purpose of the method
+    * @return Return values
+    */
+    LeastSquares.prototype.plane3D = function(){
+        var A = [];
+        var B = [];
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            B[i] = [];
+            A[i][0] = this.x[i];
+            A[i][1] = this.y[i];
+            A[i][2] = 1;
+            B[i][0] = this.z[i];
+        }
+        A = new Matrix( A );
+        B = new Matrix( B );
+        return A.solve(B);
+    }
     
     /**
     * General purpose of the method
@@ -78,6 +131,99 @@ var LeastSquares = /** @class */ (function () {
         A = new Matrix( A );
         B = new Matrix( B );
         return A.solve(B);
+    };
+    
+    /**
+    * General purpose of the method
+    * @return Return values
+    */
+    LeastSquares.prototype.poly3D = function ( degreeX, degreeY, polyParam = -1 ){
+        var A = [];
+        var B = [];
+        var degreeMax = Math.max( degreeX, degreeY );
+        var dXm1 = degreeX-1;
+        var dYm1 = degreeY-1;
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            B[i] = [];
+            var pIndex = 0;
+            // Setup individual terms for X and Y (x, x2, x3, ect... y, y2, y3, ect...)
+            A[i][pIndex++] = 1;
+            for( var dX = 1; dX <= degreeX; dX++ ){
+                A[i][pIndex] = A[i][pIndex-1] * this.x[i];
+                pIndex++;
+            }
+            for( var dY = 1; dY <= degreeY; dY++ ){
+                if( dY == 1 ){
+                    A[i][pIndex++] = this.y[i];
+                } else {
+                    A[i][pIndex] = A[i][pIndex-1] * this.y[i];
+                    pIndex++;
+                }
+            }
+            
+            // Setup the combination terms
+            // 1,1 = {}
+            // 2,1 || 1,2 || 2,2 = { xy }
+            // 3,1 = { xy, x2y }
+            // 1,3 = { xy, xy2 }
+            // 3,2 || 2,3 || 3,3 = { xy, x2y, xy2 }
+            // 4,1 = { xy, x2y, x3y }
+            // 1,4 = { xy, xy2, xy3 }
+            // 4,2 = { xy, x2y, xy2, x3y, x2y2 }
+            // 2,4 = { xy, x2y, xy2, xy3, x2y2 }
+            // 4,3 || 3,4 || 4,4 = { xy, x2y, xy2, x3y, x2y2, xy3 }
+            var xTerm = this.x[i];
+            for( var dX = 1; dX <= degreeX; dX++ ){
+                var yTerm = this.y[i];
+                for( var dY = 1; dY <= degreeY; dY++ ){
+                    if( dX+dY <= degreeMax ){
+                        A[i][pIndex++] = xTerm * yTerm;
+                    }
+                    yTerm *= this.y[i];
+                }
+                xTerm *= this.x[i];
+            }
+            B[i][0] = this.z[i];
+        }
+        
+        A = new Matrix( A );
+        B = new Matrix( B );
+        var res = A.solve(B);
+        
+        // If this has an optional return parameter, then fill out the optional return parameters
+        if( polyParam != -1 ){
+            // Setup individual terms for X and Y (x, x2, x3, ect... y, y2, y3, ect...)
+            var propNames = [ "C" ];
+            var xName = "x";
+            for( var dX = 1; dX <= degreeX; dX++ ){
+                propNames.push( xName );
+                xName += "x";
+            }
+            var yName = "y";
+            for( var dY = 1; dY <= degreeY; dY++ ){
+                propNames.push( yName );
+                yName += "y";
+            }
+            // Setup the combination terms
+            var xTerm = "x";
+            var yTerm;
+            for( var dX = 1; dX <= degreeX; dX++ ){
+                yTerm = "y";
+                for( var dY = 1; dY <= degreeY; dY++ ){
+                    if( dX+dY <= degreeMax ){
+                        propNames.push( xTerm + yTerm );
+                    }
+                    yTerm += "y";
+                }
+                xTerm += "x";
+            }
+            for( var n = 0; n < propNames.length; n++ ){
+                polyParam[ propNames[n] ] = res.A[n][0];
+            }
+        }
+        
+        return res;
     };
     
     /**
@@ -145,7 +291,7 @@ var LeastSquares = /** @class */ (function () {
     * General purpose of the method
     * @return Return values
     */
-    LeastSquares.prototype.sinLinFreq = function ( degree, stFreq=1.0 ){
+    LeastSquares.prototype.sinLinFreq = function ( degree, stFreq=1.0, freqStep=stFreq ){
         var A = [];
         var B = [];
         for( var i = 0; i < this.x.length; i++ ){
@@ -156,7 +302,7 @@ var LeastSquares = /** @class */ (function () {
             var freqMult = stFreq;
             for( var d = degree-1; d >= 0; d-- ){
                 A[i][d]   = Math.sin( this.x[i] * freqMult );
-                freqMult += 1.0;
+                freqMult += freqStep;
             }
         }
         A = new Matrix( A );
@@ -168,7 +314,7 @@ var LeastSquares = /** @class */ (function () {
     * General purpose of the method
     * @return Return values
     */
-    LeastSquares.prototype.cosLinFreq = function ( degree, stFreq=1.0 ){
+    LeastSquares.prototype.cosLinFreq = function ( degree, stFreq=1.0, freqStep=stFreq ){
         var A = [];
         var B = [];
         for( var i = 0; i < this.x.length; i++ ){
@@ -179,7 +325,7 @@ var LeastSquares = /** @class */ (function () {
             var freqMult = stFreq;
             for( var d = degree-1; d >= 0; d-- ){
                 A[i][d]   = Math.cos( this.x[i] * freqMult );
-                freqMult += 1.0;
+                freqMult += freqStep;
             }
         }
         A = new Matrix( A );
@@ -191,7 +337,7 @@ var LeastSquares = /** @class */ (function () {
     * General purpose of the method
     * @return Return values
     */
-    LeastSquares.prototype.sinCosLinFreq = function ( degree, stFreq=1.0 ){
+    LeastSquares.prototype.sinCosLinFreq = function ( degree, stFreq=1.0, freqStep=stFreq ){
         var A = [];
         var B = [];
         for( var i = 0; i < this.x.length; i++ ){
@@ -203,7 +349,7 @@ var LeastSquares = /** @class */ (function () {
             for( var d = degree*2-1; d >= 0; d-=2 ){
                 A[i][d]   = Math.sin( this.x[i] * freqMult );
                 A[i][d-1] = Math.cos( this.x[i] * freqMult );
-                freqMult += 1.0;
+                freqMult += freqStep;
             }
         }
         A = new Matrix( A );
@@ -540,6 +686,121 @@ var LeastSquares = /** @class */ (function () {
         }
         
         return new Matrix( out );
+    };
+    
+    LeastSquares.prototype.sphere3D = function ( sphereParam = -1 ){
+        // Basing on my own work at https://math.stackexchange.com/questions/4606786/converting-ellipsoid-equation-to-canonical-form-parameters
+        var lsA = [];	
+        var lsB = [];	
+        for( var i = 0; i < this.x.length; i++ ){	
+            lsA[i] = [];	
+            lsB[i] = [];	
+            lsB[i][0] = -1;
+            lsA[i][8] = this.z[i];
+            lsA[i][7] = this.y[i];
+            lsA[i][6] = this.x[i];
+            lsA[i][5] = this.y[i] * this.z[i];
+            lsA[i][4] = this.x[i] * this.z[i];
+            lsA[i][3] = this.x[i] * this.y[i];
+            lsA[i][2] = this.z[i] * this.z[i];	
+            lsA[i][1] = this.y[i] * this.y[i];
+            lsA[i][0] = this.x[i] * this.x[i];
+        }	
+        lsA = new Matrix( lsA );	
+        lsB = new Matrix( lsB );	
+        var res = lsA.solve(lsB);
+
+        // Solve for the sphere plotting parameters
+        var A = res.A[0][0]; // xx A
+        var B = res.A[1][0]; // yy B
+        var C = res.A[2][0]; // zz C
+        var D = 0.5 * res.A[3][0]; // xy D
+        var E = 0.5 * res.A[4][0]; // xz E
+        var F = 0.5 * res.A[5][0]; // yz F
+        var G = res.A[6][0]; // x G
+        var H = res.A[7][0]; // y H
+        var I = res.A[8][0]; // z I
+        var cst = 1;
+        
+        var dd    = D*D;
+        var ee    = E*E;
+        var ff    = F*F;
+        
+        var efmcd = E*F-C*D;
+        var dfmbe = D*F-B*E;
+        var demaf = D*E-A*F;
+        var bamdd = B*A-dd;
+        var den   = 2*D*E*F+C*(bamdd)-A*ff-B*ee;
+        
+        var x_c = -0.5*(G*(B*C-ff)+H*(efmcd) +I*(dfmbe))/den;
+        var y_c = -0.5*(G*(efmcd) +H*(C*A-ee)+I*(demaf))/den;
+        var z_c = -0.5*(G*(dfmbe) +H*(demaf) +I*(bamdd))/den;
+        
+        var M = [
+            [ A, D, E ],
+            [ D, B, F ],
+            [ E, F, C ]
+        ];
+        
+        var N = [
+            [ x_c ],
+            [ y_c ],
+            [ z_c ]
+        ];
+        
+        M = new Matrix( M );
+        N = new Matrix( N );
+        var NT = N.transpose();
+        
+        var MtN = M.times( N );
+        var NTtMtN = NT.times( MtN );
+        var NTtMtNmC = NTtMtN.A[0][0] - 1;
+        var Mpr = M.times( 1/NTtMtNmC );
+        
+        var eig = Mpr.eig();
+        
+        var a_r   = 1 / Math.sqrt( Math.abs( -eig.d[0] ) );
+        var b_r   = 1 / Math.sqrt( Math.abs( -eig.d[1] ) );
+        var c_r   = 1 / Math.sqrt( Math.abs( -eig.d[2] ) );
+        
+        var sqrt1mR20 = Math.sqrt( 1 - eig.V[2][0] * eig.V[2][0] );
+        var beta      = Math.asin( eig.V[2][0] );
+        var gamma     = Math.atan2( eig.V[2][1]/sqrt1mR20, eig.V[2][2]/sqrt1mR20 );
+        var alpha     = Math.atan2( eig.V[1][0]/sqrt1mR20, eig.V[0][0]/sqrt1mR20 );
+        
+        if( sphereParam != -1 ){
+            sphereParam.x_c   = x_c;
+            sphereParam.y_c   = y_c;
+            sphereParam.z_c   = z_c;
+            sphereParam.a_r   = a_r;
+            sphereParam.b_r   = b_r;
+            sphereParam.c_r   = c_r;
+            sphereParam.alpha = alpha;
+            sphereParam.beta  = beta;
+            sphereParam.gamma = gamma;
+            sphereParam.eigV  = eig.V;
+        }
+        
+        return res;
+        
+        /*var A = [
+            [ a0,     0.5*a3, 0.5*a4 ],
+            [ 0.5*a3, a1,     0.5*a5 ],
+            [ 0.5*a4, 0.5*a5, a2     ]
+        ];
+        var B = [
+            [ a6 ],
+            [ a7 ],
+            [ a8 ]
+        ];
+        
+        var invA   = A.inverse();
+        var invAtB = invA.times( B );
+        var r_c    = {
+            [ -0.5*invAtB.A[0][0] ],
+            [ -0.5*invAtB.A[0][1] ],
+            [ -0.5*invAtB.A[0][2] ]
+        ];*/
     };
     
     LeastSquares.runLeastSquaresTest = function () {
