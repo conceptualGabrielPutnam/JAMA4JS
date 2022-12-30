@@ -1,10 +1,12 @@
 <html>
     <head>
+        <script src="starsTo100LY.js"></script>
         <script src="JAMA.min.js"></script>
         <script src="test/JAMA_Test.min.js"></script>
         <script src="example/JAMA_Example.min.js"></script>
-        <script src="leastsquares/JAMA_LeastSquares.js"></script>
+        <script src="leastsquares/JAMA_LeastSquares.min.js"></script>
         <script src="loader.js"></script>
+        <script src="https://cdn.plot.ly/plotly-2.16.1.min.js"></script>
         <script>
             function testJAMA(){
                 TestMatrix.runJAMATest();
@@ -16,12 +18,12 @@
                 LeastSquares.runLeastSquaresTest();
             }
             
-            function calcAllEllipses(){
-                scatterData = [ [ 'X', 'Y', 'ellipseYA', 'ellipseYB', 'ellipseYC', 'ellipseYD', 'ellipseYE', 'ellipseYF' ] ];
+            function calcEllipses(){
+                scatterDataEllipse = [ [ 'X', 'Y', 'ellipseYA', 'ellipseYB', 'ellipseYC', 'ellipseYD', 'ellipseYE', 'ellipseYF' ] ];
                 for( var i = 0; i < xElp.length; i++ ){
-                    xElp[i] = data.getValue( i, 0 );
-                    yElp[i] = data.getValue( i, 1 );
-                    scatterData.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
+                    xElp[i] = dataEllipse.getValue( i, 0 );
+                    yElp[i] = dataEllipse.getValue( i, 1 );
+                    scatterDataEllipse.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
                 }
                 
                 ellipseData  = [];
@@ -113,29 +115,116 @@
                     ellipseData.push( [ ellipseX, null, null, null, null, null, null, ellipseY ] );
                     paramAng += incr;
                 }
-                combinedData = scatterData.concat( ellipseData );
-                data = google.visualization.arrayToDataTable( combinedData );
-                myScatterChart.setDataTable( data );
-                drawChart();
+                combinedDataEllipse = scatterDataEllipse.concat( ellipseData );
+                dataEllipse = google.visualization.arrayToDataTable( combinedDataEllipse );
+                myScatterChartEllipse.setDataTable( dataEllipse );
+                myScatterChartEllipse.draw();
+            }
+            
+            function calcSinCos(){
+                scatterDataSinCos = [ [ 'X', 'Y', 'SinCosLin', 'SinCosExp' ] ];
+                for( var i = 0; i < xSinCos.length; i++ ){
+                    xSinCos[i] = dataSinCos.getValue( i, 0 );
+                    ySinCos[i] = dataSinCos.getValue( i, 1 );
+                    scatterDataSinCos.push( [ xSinCos[i], ySinCos[i], null, null ] );
+                }
+                
+                var lsSinCos = new LeastSquares( xSinCos, ySinCos );
+                
+                sinCosData  = [];
+                var segments = 50;
+                var xMin     = optionsSinCos.hAxis.viewWindow.min;
+                var xMax     = optionsSinCos.hAxis.viewWindow.max;
+                var incr     = (xMax - xMin)/segments;
+                
+                // Calculating the interpolated values for a linear freq sinCos fit
+                var degree   = 5;
+                var freqSt   = 0.5;
+                var freqStep = freqSt;
+                res = lsSinCos.sinCosLinFreq( degree, freqSt, freqStep );
+                res.print( 5, 3 );
+                
+                var sinCosX = xMin;
+                for( var i = 0; i <= segments; i++ ){
+                    var freqMult = freqSt;
+                    var sinCosY = res.A[degree*2][0];
+                    for( var d = degree*2-1; d >= 0; d-=2 ){
+                        sinCosY += res.A[d][0]   * Math.sin( freqMult * sinCosX );
+                        sinCosY += res.A[d-1][0] * Math.cos( freqMult * sinCosX );
+                        freqMult += freqStep;
+                    }
+                    sinCosData.push( [ sinCosX, null, sinCosY, null ] );
+                    sinCosX += incr;
+                }
+                
+                // Calculating the interpolated values for an exponential freq sinCos fit
+                degree   = 5;
+                freqSt   = 0.5;
+                freqMultiplier = 2.0;
+                res = lsSinCos.sinCosExpFreq( degree, freqSt, freqMultiplier );
+                res.print( 5, 3 );
+                
+                sinCosX = xMin;
+                for( var i = 0; i <= segments; i++ ){
+                    /*var sinCosY = res.A[0][0]*Math.sin(40*sinCosX)+
+                                  res.A[1][0]*Math.cos(40*sinCosX)+
+                                  res.A[2][0]*Math.sin(20*sinCosX)+
+                                  res.A[3][0]*Math.cos(20*sinCosX)+
+                                  res.A[4][0]*Math.sin(10*sinCosX)+
+                                  res.A[5][0]*Math.cos(10*sinCosX)+
+                                  res.A[6][0];*/
+                    var freqMult = freqSt;
+                    var sinCosY  = res.A[degree*2][0];
+                    for( var d = degree*2-1; d >= 0; d-=2 ){
+                        sinCosY += res.A[d][0]   * Math.sin( freqMult * sinCosX );
+                        sinCosY += res.A[d-1][0] * Math.cos( freqMult * sinCosX );
+                        freqMult *= freqMultiplier;
+                    }
+                    sinCosData.push( [ sinCosX, null, null, sinCosY ] );
+                    sinCosX += incr;
+                }
+                
+                combinedDataSinCos = scatterDataSinCos.concat( sinCosData );
+                dataSinCos = google.visualization.arrayToDataTable( combinedDataSinCos );
+                myScatterChartSinCos.setDataTable( dataSinCos );
+                myScatterChartSinCos.draw();
             }
         </script>
         <script>
             google.charts.load('current', {'packages':['corechart']});
             google.charts.setOnLoadCallback( initChart );
             
-            var myScatterChart;
-            var selectedPoint = null;
-            var spXst = null;
-            var spYst = null;
+            var myScatterChartEllipse;
+            var myScatterChartSinCos;
+            var selectedPointEllipse = null;
+            var selectedPointSinCos = null;
+            var selectedPoint3D = null;
             
             var xElp = [];
             var yElp = [];
             
-            var scatterData = [ [ 'X', 'Y', 'ellipseYA', 'ellipseYB', 'ellipseYC', 'ellipseYD', 'ellipseYE', 'ellipseYF' ] ];
+            var xSinCos = [];
+            var ySinCos = [];
+            
+            //var xSinCos = [ 0.037429811, 0.083488725, 0.137094865, 0.153523603, 0.173117839, 0.185711451, 0.187655207, 0.285912045, 0.288370293, 0.295974099, 0.300510972, 0.358703401, 0.401618916, 0.485386043, 0.510703949, 0.519432488, 0.529587317, 0.529821905, 0.557793421, 0.562190618, 0.592251179, 0.611030014, 0.619995355, 0.710151685, 0.809497463, 0.834813425, 0.913974888, 0.966634609, 0.972233795, 0.972950908 ];
+            //var ySinCos = [ 0.058030451, 0.154093159, 0.238023745, 0.588424668, 0.30823643, 0.710897663, 0.527552888, 0.069685073, 0.055485191, 0.131389179, 0.319387128, 0.212793677, 0.401301559, 0.478089423, 0.39393612, 0.301702746, 0.912314852, 0.895030989, 0.233999395, 0.121399731, 0.310668533, 0.714797546, 0.842531267, 0.286987422, 0.128383908, 0.057959329, 0.429895272, 0.129995286, 0.560237285, 0.584452711 ];
+
+            var scatterDataEllipse = [ [ 'X', 'Y', 'ellipseYA', 'ellipseYB', 'ellipseYC', 'ellipseYD', 'ellipseYE', 'ellipseYF' ] ];
             for( var i = 0; i < 30; i++ ){
                 xElp[i] = ( Math.random() - 0.5 ) * 5;
                 yElp[i] = ( Math.random() - 0.5 ) * 5;
-                scatterData.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
+                scatterDataEllipse.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
+            }
+            
+            var scatterDataSinCos = [ [ 'X', 'Y', 'SinCosLin', 'SinCosExp' ] ];
+            /*for( var i = 0; i < xSinCos.length; i++ ){
+                scatterDataSinCos.push( [ xSinCos[i], ySinCos[i], null, null ] );
+            }*/
+            
+            for( var i = 0; i < 30; i++ ){
+                xSinCos[i] = ( Math.random() - 0.5 ) * 7.5;
+                ySinCos[i] = ( Math.random() - 0.5 ) * 7.5;
+                scatterDataSinCos.push( [ xSinCos[i], ySinCos[i], null, null ] );
             }
             
             var ellipseData = [
@@ -147,25 +236,26 @@
                 [ 0, null, null, null, null, null, null, 0    ]
             ];
             
-            var combinedData = scatterData.concat( ellipseData );
+            var sinCosData = [
+                [ 0, null, 0,    null ],
+                [ 0, null, null, 0    ]
+            ];
             
-            var data;
+            var combinedDataEllipse = scatterDataEllipse.concat( ellipseData );
+            var combinedDataSinCos  = scatterDataSinCos.concat( sinCosData );
             
-            var options = {
-                title: 'X vs Y Ellipse Least Square Fit',
+            var dataEllipse;
+            var dataSinCos;
+            
+            var optionsEllipse = {
+                title: 'X vs Y Ellipse Least Square Fit\nDrag points to change the graph',
                 hAxis: {
                   title: 'X',
-                  viewWindow:{
-                      max:5,
-                      min:-5
-                  }
+                  viewWindow:{ max:5, min:-5 }
                 },
                 vAxis: {
                   title: 'Y',
-                  viewWindow:{
-                      max:5,
-                      min:-5
-                  }
+                  viewWindow:{ max:5, min:-5 }
                 },
                 seriesType: 'scatter',
                 series: {
@@ -176,47 +266,607 @@
                   5: { type: 'line' },
                   6: { type: 'line' }
                 },
-                legend: 'none'
+                legend: 'none',
+                selectedPt: selectedPointEllipse
+            };
+            
+            var optionsSinCos = {
+                title: 'X vs Y SinCos (linear and exp freq) Least Square Fit\nDrag points to change the graph',
+                hAxis: {
+                  title: 'X',
+                  viewWindow:{ max:5, min:-5 }
+                },
+                vAxis: {
+                  title: 'Y',
+                  viewWindow:{ max:5, min:-5 }
+                },
+                seriesType: 'scatter',
+                series: {
+                  1: { type: 'line' },
+                  2: { type: 'line' }
+                },
+                legend: 'none',
+                selectedPt: selectedPointSinCos
             };
             
             function initChart(){
-                data = google.visualization.arrayToDataTable( combinedData );
+                dataEllipse = google.visualization.arrayToDataTable( combinedDataEllipse );
+                dataSinCos = google.visualization.arrayToDataTable( combinedDataSinCos );
                 
-                myScatterChart = new google.visualization.ChartWrapper({
+                // Set up a chart for 2D Ellipse variation fitting
+                myScatterChartEllipse = new google.visualization.ChartWrapper({
                     chartType:   'ComboChart',
-                    containerId: 'exampleChart',
-                    dataTable:   data,
-                    options:     options
+                    containerId: 'ellipseChart',
+                    dataTable:   dataEllipse,
+                    options:     optionsEllipse
                 });
                 
-                document.getElementById("exampleChart").addEventListener( "mousemove", mouseMoveScript );
-                document.getElementById("exampleChart").addEventListener( "mousedown", mouseDownScript );
-                document.getElementById("exampleChart").addEventListener( "mouseup", mouseUpScript );
+                // Set up a chart for 2D SinCos function fitting
+                myScatterChartSinCos = new google.visualization.ChartWrapper({
+                    chartType:   'ComboChart',
+                    containerId: 'sinCosChart',
+                    dataTable:   dataSinCos,
+                    options:     optionsSinCos
+                });
                 
-                drawChart();
-                calcAllEllipses();
-            }
+                document.getElementById("ellipseChart").addEventListener( "mousemove", handleMouseMove( myScatterChartEllipse ) );
+                document.getElementById("ellipseChart").addEventListener( "mousedown", handleMouseDown( myScatterChartEllipse ) );
+                document.getElementById("ellipseChart").addEventListener( "mouseup",   handleMouseUp( myScatterChartEllipse ) );
+                
+                document.getElementById("sinCosChart").addEventListener( "mousemove", handleMouseMove( myScatterChartSinCos ) );
+                document.getElementById("sinCosChart").addEventListener( "mousedown", handleMouseDown( myScatterChartSinCos ) );
+                document.getElementById("sinCosChart").addEventListener( "mouseup",   handleMouseUp( myScatterChartSinCos ) );
+                
+                myScatterChartEllipse.draw();
+                myScatterChartSinCos.draw();
+                calcEllipses();
+                calcSinCos();
+                
+                //------------------------------------
+                // Test for 3D Line and Plane Fitting
+                //------------------------------------
+                
+                // Set up a 3D plotly plot
+                var x3D = [ -0.549, -0.459, -0.391, -0.495, -0.429, -0.289, -0.119, -0.296, -0.132, -0.158, 0.118, 0.052, 0.035, 0.055, 0.244, 0.180, 0.448, 0.306, 0.347, 0.413, 0.641 ];
+                var y3D = [ -0.561, -0.561, -0.628, -0.506, -0.067, -0.027, -0.316, -0.110, -0.137, -0.083, -0.055, 0.248, 0.025, 0.125, 0.427, 0.301, 0.296, 0.331, 0.398, 0.229, 0.447 ];
+                var z3D = [ -0.511, -0.549, -0.360, -0.472, -0.328, -0.326, -0.081, -0.188, -0.048, 0.022, 0.050, -0.106, 0.067, 0.223, 0.298, 0.133, 0.334, 0.196, 0.353, 0.377, 0.359 ];
 
-            function drawChart() {
-                myScatterChart.draw();
+                var ls3DLine = new LeastSquares( x3D, y3D, z3D );
+                var lineParams = ls3DLine.line3D();
+                console.log( lineParams.A );
+                var planeParams = ls3DLine.plane3D();
+
+                var scatterPts3D = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: x3D,
+                    y: y3D,
+                    z: z3D,
+                    marker: {
+                        size: 12,
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5
+                        },
+                        opacity: 0.8
+                    }
+                };
+                
+                var xLine3D = [];
+                var yLine3D = [];
+                var zLine3D = [];
+                for( var i = -1; i < 1; i+= 0.1 ){
+                    xLine3D.push( lineParams.A[0][0] + i * lineParams.A[0][1] );
+                    yLine3D.push( lineParams.A[1][0] + i * lineParams.A[1][1] );
+                    zLine3D.push( lineParams.A[2][0] + i * lineParams.A[2][1] );
+                }
+                
+                var linePts3D = {
+                    type: 'scatter3d',
+                    mode: 'lines',
+                    x: xLine3D,
+                    y: yLine3D,
+                    z: zLine3D,
+                    opacity: 1,
+                    line: {
+                        width: 6,
+                        color: 'rgba(217, 217, 217, 1.0)',
+                        reversescale: false
+                    }
+                };
+                
+                var xPlane3D = [];
+                var yPlane3D = [];
+                var zPlane3D = [];
+                var x3DMax = Math.max.apply( Math, x3D );
+                var x3DMin = Math.min.apply( Math, x3D );
+                var y3DMax = Math.max.apply( Math, y3D );
+                var y3DMin = Math.min.apply( Math, y3D );
+                var xDelta = ( x3DMax - x3DMin ) / 10;
+                var yDelta = ( y3DMax - y3DMin ) / 10;
+                for( var x = x3DMin; x <= x3DMax; x += xDelta ){
+                    for( var y = y3DMin; y <= y3DMax; y += yDelta ){
+                        xPlane3D.push( x );
+                        yPlane3D.push( y );
+                        zPlane3D.push( planeParams.A[0][0] * x + planeParams.A[1][0] * y + planeParams.A[2][0] );
+                    }
+                }
+                
+                var planePts3D = {
+                    type: 'mesh3d',
+                    opacity: 0.5,
+                    x: xPlane3D,
+                    y: yPlane3D,
+                    z: zPlane3D,
+                    intensity: zPlane3D,
+                    colorscale: 'Viridis'
+                };
+
+                var data = [ scatterPts3D, linePts3D, planePts3D ];
+                var layout = {
+                    title: '3D Line and Plane Fits',
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    xaxis: {
+                        title: 'x-axis',
+                        fixedrange:true
+                    },
+                    yaxis: {
+                        title: 'y-axis',
+                        fixedrange:true
+                    },
+                    height: 500,
+                    width: 500
+                };
+                
+                Plotly.newPlot( 'plane3DChart', data, layout, { scrollZoom: false } );
+                
+                //----------------------------------------
+                // Test for 3D Polynomial Surface Fitting
+                //----------------------------------------
+                
+                // Setup another plotly plot to show multi-dimensional polynomial curve fitting
+                var x3DPoly = [ -0.463, -0.042, 0.327, -0.153, 0.317, 0.139, -0.242, -0.362, -0.002, -0.451, 0.065, 0.077, 0.095, -0.005, -0.250, 0.145, 0.286, -0.013, -0.479, 0.356, 0.356, 0.436, -0.485, -0.186, 0.179, -0.229 ];
+                var y3DPoly = [ -0.206, -0.462, 0.455, -0.364, -0.175, 0.226, -0.224, -0.192, 0.260, 0.034, -0.229, 0.187, -0.198, 0.388, 0.384, 0.297, -0.481, -0.109, 0.260, 0.392, 0.361, 0.194, -0.165, 0.251, 0.490, 0.231 ];
+                var z3DPoly = [ -0.084, -0.237, 0.157, -0.328, -0.187, 0.116, 0.220, -0.167, 0.170, -0.050, -0.109, 0.424, 0.190, 0.227, 0.064, -0.447, 0.060, -0.167, 0.057, -0.286, -0.160, -0.100, 0.387, -0.172, -0.066, 0.079 ];
+                
+                var ls3DLine = new LeastSquares( x3DPoly, y3DPoly, z3DPoly );
+                var polyParam = {};
+                var polyRes = ls3DLine.poly3D( 5, 2, polyParam );
+                console.log( polyParam );
+                console.log( polyRes );
+
+                var polyScatterPts3D = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: x3DPoly,
+                    y: y3DPoly,
+                    z: z3DPoly,
+                    marker: {
+                        size: 12,
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5
+                        },
+                        opacity: 0.8
+                    }
+                };
+                
+                var xPolySurf3D = [];
+                var yPolySurf3D = [];
+                var zPolySurf3D = [];
+                var x3DMaxPoly = Math.max.apply( Math, x3DPoly );
+                var x3DMinPoly = Math.min.apply( Math, x3DPoly );
+                var y3DMaxPoly = Math.max.apply( Math, y3DPoly );
+                var y3DMinPoly = Math.min.apply( Math, y3DPoly );
+                var xDeltaPoly = ( x3DMaxPoly - x3DMinPoly ) / 10;
+                var yDeltaPoly = ( y3DMaxPoly - y3DMinPoly ) / 10;
+                for( var x = x3DMinPoly; x <= x3DMaxPoly; x += xDeltaPoly ){
+                    for( var y = y3DMinPoly; y <= y3DMaxPoly; y += yDeltaPoly ){
+                        xPolySurf3D.push( x );
+                        yPolySurf3D.push( y );
+                        var zRes = 0;
+                        for( var param in polyParam ){
+                            if( param == "C" ){
+                                zRes += polyParam[ param ];
+                            } else {
+                                var xyList = param.split( '' );
+                                var value = polyParam[ param ];
+                                for( var xy in xyList ){
+                                    if( xyList[xy] == "x" ){
+                                        value *= x;
+                                    } else {
+                                        value *= y;
+                                    }
+                                }
+                                zRes += value;
+                            }
+                        }
+                        zPolySurf3D.push( zRes );
+                    }
+                }
+                
+                var polyPts3D = {
+                    type: 'mesh3d',
+                    opacity: 0.5,
+                    x: xPolySurf3D,
+                    y: yPolySurf3D,
+                    z: zPolySurf3D,
+                    intensity: zPolySurf3D,
+                    colorscale: 'Viridis'
+                };
+
+                var dataPoly = [ polyScatterPts3D, polyPts3D ];
+                var layoutPoly = {
+                    title: '3D Multivariate Polynomial Curve Fit ( x => 1-5, y => 1-2 )',
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    xaxis: {
+                        title: 'x-axis',
+                        fixedrange:true
+                    },
+                    yaxis: {
+                        title: 'y-axis',
+                        fixedrange:true
+                    },
+                    height: 500,
+                    width: 500
+                };
+                
+                Plotly.newPlot( 'poly3DChart', dataPoly, layoutPoly, { scrollZoom: false } );
+                
+                //----------------------------
+                // Test for 3D Sphere Fitting
+                //----------------------------
+                
+                // Setup another plotly plot to show star chart fitting
+                var x3DStars   = [];
+                var y3DStars   = [];
+                var z3DStars   = [];
+                var lum        = [];
+                var lumMin     = 0;
+                var lumMax     = 0;
+                var colorStars = [];
+                
+                var spectraLetterNumber = [];
+                
+                var validLetters = [ 'G','M','K','A','D','F','S','B','R','C','W','O','N' ];
+                var vagueLetters = [ 'k', 'm', 'a', 'g', 'f' ];
+                
+                // Variation on sphere fitting using random, rotated points
+                /*var starCnt = 1000;
+                var alphaRand = Math.PI / 3;
+                var betaRand = Math.PI / 5;
+                var gammaRand = Math.PI / 7;
+                
+                var cosa = Math.cos( alphaRand );
+                var sina = Math.sin( alphaRand );
+                var cosb = Math.cos( betaRand );
+                var sinb = Math.sin( betaRand );
+                var cosg = Math.cos( gammaRand );
+                var sing = Math.sin( gammaRand );
+                
+                var RRand = [
+                    [ cosa * cosb, (cosa * sinb * sing - sina * cosg), (cosa * sinb * cosg + sina * sing) ],
+                    [ sina * cosb, (sina * sinb * sing + cosa * cosg), (sina * sinb * cosg - cosa * sing) ],
+                    [ (-sinb),     cosb * sing,                        cosb * cosg                        ]
+                ];
+                
+                for( var i = 0; i < starCnt; i++ ){
+                    var xRandStar = Math.random()*100;
+                    var yRandStar = Math.random()*50;
+                    var zRandStar = Math.random()*25
+                    x3DStars.push( RRand[0][0] * xRandStar + RRand[0][1] * yRandStar + RRand[0][2] * zRandStar );
+                    y3DStars.push( RRand[1][0] * xRandStar + RRand[1][1] * yRandStar + RRand[1][2] * zRandStar );
+                    z3DStars.push( RRand[2][0] * xRandStar + RRand[2][1] * yRandStar + RRand[2][2] * zRandStar );
+                }*/
+                
+                for( var i = 0; i < starsTo100LY.length; i++ ){
+                    x3DStars.push( starsTo100LY[i].xyz[0] );
+                    y3DStars.push( starsTo100LY[i].xyz[1] );
+                    z3DStars.push( starsTo100LY[i].xyz[2] );
+                    var lumStar = starsTo100LY[i].lum;
+                    if( lumMin > lumStar ){
+                        lumMin = lumStar;
+                    }
+                    if( lumMax < lumStar ){
+                        lumMax = lumStar;
+                    }
+                    lum.push( lumStar );
+                    var spectra = starsTo100LY[i].spect;
+                    if( spectra != 'undefined' ){
+                        var stIndex = 0;
+                        while( spectra.slice(stIndex,stIndex+1) == 's' || spectra.slice(stIndex,stIndex+1) == 'd' || spectra.slice(stIndex,stIndex+1) == 'D' ){
+                            stIndex++;
+                        }
+                        var spectraLetter = spectra.slice(stIndex,stIndex+1);
+                        var spectraNumber = spectra.slice(stIndex+1,stIndex+2);
+                        var foundLetter = false;
+                        for( var letter = 0; letter < validLetters.length; letter++ ){
+                            if( spectraLetter == validLetters[letter] ){
+                                foundLetter = true;
+                                break;
+                            }
+                        }
+                        
+                        for( var letter = 0; letter < vagueLetters.length; letter++ ){
+                            if( spectraLetter == vagueLetters[letter] ){
+                                foundLetter = true;
+                                spectraLetter = spectraLetter.toUpperCase();
+                                break;
+                            }
+                        }
+                        
+                        var isNumber = ( isNumeric( spectraNumber ) === true );
+                        if( foundLetter ){
+                            if( isNumber ){
+                                spectraLetterNumber.push( spectraLetter + spectraNumber );
+                                colorStars.push( colorFromSpectra( spectraLetter, spectraNumber ) );
+                            } else {
+                                spectraLetterNumber.push( spectraLetter + '5' );
+                                colorStars.push( colorFromSpectra( spectraLetter, '5' ) );
+                            }
+                        } else {
+                            console.log( "Found bad letter number: " + spectra + " replaced with G5" );
+                            spectraLetterNumber.push( 'G5' );
+                            colorStars.push( colorFromSpectra( 'G', '5' ) );
+                        }
+                    }
+                }
+                
+                // Calculate the radius based on the magnitude
+                var radiusStars = [];
+                for( var i = 0; i < lum.length; i++ ){
+                    var lnLum = Math.log( lum[i] );
+                    radiusStars.push( 9 * lnLum * ( 0.003415 * lnLum + 0.090592 ) + 1.005151 );
+                }
+                
+                // Calculate a least squares fit for a sphere to the stars
+                var ls3DSphere = new LeastSquares( x3DStars, y3DStars, z3DStars );
+                var sphParam  = {};
+                var sphereRes = ls3DSphere.sphere3D( sphParam );
+                
+                // Calculate the data points for mesh3D construction
+                // mult through by
+                // cos(th)cos(la)
+                // cos(th)sin(la)
+                // sin(th)
+                // x = x_c + a * cos(th)cos(la) * cosαcosβ + b * cos(th)sin(la) * (cosαsinβsinγ−sinαcosγ) + c * sin(th) * (cosαsinβcosγ+sinαsinγ)
+                // y = y_c + a * cos(th)cos(la) * sinαcosβ + b * cos(th)sin(la) * (sinαsinβsinγ+cosαcosγ) + c * sin(th) * (sinαsinβcosγ−cosαsinγ)
+                // z = z_c + a * cos(th)cos(la) * (−sinβ)  + b * cos(th)sin(la) * cosβsinγ                + c * sin(th) * cosβcosγ
+                var R = [
+                    [ sphParam.a_r * sphParam.eigV[0][0], sphParam.b_r * sphParam.eigV[0][1], sphParam.c_r * sphParam.eigV[0][2] ],
+                    [ sphParam.a_r * sphParam.eigV[1][0], sphParam.b_r * sphParam.eigV[1][1], sphParam.c_r * sphParam.eigV[1][2] ],
+                    [ sphParam.a_r * sphParam.eigV[2][0], sphParam.b_r * sphParam.eigV[2][1], sphParam.c_r * sphParam.eigV[2][2] ]
+                ];
+                
+                var xSphereSurf3DUpper = [];
+                var xSphereSurf3DLower = [];
+                var ySphereSurf3DUpper = [];
+                var ySphereSurf3DLower = [];
+                var zSphereSurf3DUpper = [];
+                var zSphereSurf3DLower = [];
+                var rSphereSurf3DUpper = [];
+                var rSphereSurf3DLower = [];
+                
+                var lambdaArr = [];
+                var thetaArr  = [];
+                
+                lambdaArr = makeInterval(0, Math.PI/2, 20);  
+                thetaArr  = makeInterval(0, 2*Math.PI, 20);
+                
+                for ( var th = 0; th < thetaArr.length; th++ ){
+                    var costh = Math.cos( thetaArr[th] );
+                    var sinth = Math.sin( thetaArr[th] );
+                    for ( var la = 0; la < lambdaArr.length; la++ ){
+                        var cosla = Math.cos( lambdaArr[la] );
+                        var sinla = Math.sin( lambdaArr[la] );
+                        var costhsinth = costh * sinla;
+                        var sinthsinla = sinth * sinla;
+                        
+                        var xSphUnit = costhsinth;
+                        var ySphUnit = sinthsinla;
+                        var zSphUnitUpper = cosla;
+                        var zSphUnitLower = -cosla;
+                        var rSphUnit = Math.sqrt( xSphUnit * xSphUnit + ySphUnit * ySphUnit + zSphUnitUpper * zSphUnitUpper );
+                        
+                        var xSphUpper = sphParam.x_c + R[0][0] * xSphUnit + R[0][1] * ySphUnit + R[0][2] * zSphUnitUpper;
+                        var ySphUpper = sphParam.y_c + R[1][0] * xSphUnit + R[1][1] * ySphUnit + R[1][2] * zSphUnitUpper;
+                        var zSphUpper = sphParam.z_c + R[2][0] * xSphUnit + R[2][1] * ySphUnit + R[2][2] * zSphUnitUpper;
+                        var rSphUpper = Math.sqrt( xSphUpper * xSphUpper + ySphUpper * ySphUpper + zSphUpper * zSphUpper );
+                        
+                        var xSphLower = sphParam.x_c + R[0][0] * xSphUnit + R[0][1] * ySphUnit + R[0][2] * zSphUnitLower;
+                        var ySphLower = sphParam.y_c + R[1][0] * xSphUnit + R[1][1] * ySphUnit + R[1][2] * zSphUnitLower;
+                        var zSphLower = sphParam.z_c + R[2][0] * xSphUnit + R[2][1] * ySphUnit + R[2][2] * zSphUnitLower;
+                        var rSphLower = Math.sqrt( xSphLower * xSphLower + ySphLower * ySphLower + zSphLower * zSphLower );
+                        xSphereSurf3DUpper.push( xSphUpper );
+                        ySphereSurf3DUpper.push( ySphUpper );
+                        zSphereSurf3DUpper.push( zSphUpper );
+                        rSphereSurf3DUpper.push( rSphUpper );
+                        
+                        xSphereSurf3DLower.push( xSphLower );
+                        ySphereSurf3DLower.push( ySphLower );
+                        zSphereSurf3DLower.push( zSphLower );
+                        rSphereSurf3DLower.push( rSphLower );
+                    }
+                }
+
+                var starScatterPts3D = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: x3DStars,
+                    y: y3DStars,
+                    z: z3DStars,
+                    marker: {
+                        color: colorStars,
+                        size: radiusStars,
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5,
+                            opacity: 0.5
+                        },
+                        opacity: 1
+                    }
+                };
+                
+                var starSphereSurf3DUpper = {
+                    type: 'scatter3d',
+                    opacity: 0.5,
+                    x: xSphereSurf3DUpper,
+                    y: ySphereSurf3DUpper,
+                    z: zSphereSurf3DUpper,
+                    intensity: rSphereSurf3DUpper,
+                    colorscale: 'Viridis'
+                };
+                
+                var starSphereSurf3DLower = {
+                    type: 'scatter3d',
+                    opacity: 0.5,
+                    x: xSphereSurf3DLower,
+                    y: ySphereSurf3DLower,
+                    z: zSphereSurf3DLower,
+                    intensity: rSphereSurf3DLower,
+                    colorscale: 'Viridis'
+                };
+
+                var dataStars = [
+                    starScatterPts3D,
+                    starSphereSurf3DUpper,
+                    starSphereSurf3DLower
+                ];
+                
+                var layoutStars = {
+                    title: '3D Star Chart',
+                    scene:{
+                        aspectratio: {
+                            x: 1, y: 1, z: 1,
+                        },
+                        xaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [-125, 125]
+                        }, 
+                        yaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [-125, 125]
+                        },
+                        zaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [-125, 125]
+                        }
+                    },
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    xaxis: {
+                        title: 'x-axis'
+                    },
+                    yaxis: {
+                        title: 'y-axis'
+                    },
+                    zaxis: {
+                        title: 'z-axis'
+                    },
+                    height: 800,
+                    width: 800
+                };
+                
+                Plotly.newPlot( 'star3DChart', dataStars, layoutStars );
             }
             
-            function selectPoints( mx, my ) {
-                var chartLayout    = myScatterChart.getChart().getChartLayoutInterface();
-                var chartContainer = document.getElementById( myScatterChart.getContainerId() );
+            function makeInterval( startValue, stopValue, numPoints ) {
+                var arr = [];
+                var step = (stopValue - startValue) / (numPoints - 1);
+                for (var i = 0; i < numPoints; i++) {
+                    arr.push(startValue + (step * i));
+                }
+                return arr;
+            }
+            
+            function colorFromSpectra( letter, number ){
+                number = Number( number );
+                var offset = 0;
+                var r = 0;
+                var g = 0;
+                var b = 0;
+                if( letter == 'O' || letter == 'B' || letter == 'A' ){
+                    if(      letter == 'B' ){ offset = 10; }
+                    else if( letter == 'A' ){ offset = 20; }
+                    var index = offset + number;
+                    r = Math.round( index * ( 0.1079 * index - 1.0322 ) + 160.24 );
+                    g = Math.round( index * ( 0.0635 * index -  0.159 ) + 179.05 );
+                    b = 255;
+                } else if( letter == 'F' ){
+                    if( number <= 2 ){
+                        offset = 30;
+                        var index = offset + number;
+                        r = Math.round( index * ( 0.1079 * index - 1.0322 ) + 160.24 );
+                        g = Math.round( index * ( 0.0635 * index -  0.159 ) + 179.05 );
+                        b = 255;
+                    } else {
+                        var index = number - 2;
+                        r = Math.round( index * ( -0.5556 * index + 6.3333 ) + 237 );
+                        g = Math.round( index * ( -0.5 * index + 4.8333 ) + 238 );
+                        b = Math.round( index * ( -0.3333 * index + 1 ) + 255 );
+                        if( b > 255 ){ b = 255; }
+                    }
+                } else {
+                    var r = 255;
+                    if( letter == 'G' || letter == 'K' ){
+                        if(      letter == 'G' ){ offset = 2; }
+                        else if( letter == 'K' ){ offset = 12; }
+                        var index = offset + number;
+                        g = Math.round( index * ( -0.1945 * index + 1.1516 ) + 246.97 );
+                        b = Math.round( index * ( -0.2951 * index + 0.2957 ) + 245.73 );
+                    } else {
+                        var index = 3 + number;
+                        g = Math.round( index * ( 0.1123 * index - 2.2686 ) + 198.06 );
+                        b = Math.round( index * ( 0.2815 * index - 4.8967 ) + 144.05 );
+                    }
+                }
+                return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+            }
+            
+            var isNumeric = function(num){
+                return (typeof(num) === 'number' || typeof(num) === "string" && num.trim() !== '') && !isNaN(num);  
+            }
+            
+            function selectPoints( chart, mx, my ) {
+                var chartLayout    = chart.getChart().getChartLayoutInterface();
+                var chartContainer = document.getElementById( chart.getContainerId() );
                 var chartBounds    = chartContainer.getBoundingClientRect();
-                if ( ( ( (chartBounds.left + window.pageXOffset) <= mx ) && ( (chartBounds.left + chartBounds.width  + window.pageXOffset) >= mx ) ) &&
-                     ( ( (chartBounds.top  + window.pageYOffset) <= my ) && ( (chartBounds.top  + chartBounds.height + window.pageYOffset) >= my ) ) ){
+                
+                if ( ( (chartBounds.left <= mx ) && ( (chartBounds.left + chartBounds.width) >= mx  ) ) &&
+                     ( ( chartBounds.top <= my ) && ( (chartBounds.top  + chartBounds.height) >= my ) ) ){
                     var selection = [];
-                    var dataTable = myScatterChart.getDataTable();
+                    var dataTable = chart.getDataTable();
                     for (var row = 0; row < dataTable.getNumberOfRows(); row++) {
                         for (var col = 1; col < dataTable.getNumberOfColumns(); col++) {
                             var point = chartLayout.getBoundingBox('point#' + (col - 1) + '#' + row);
                             if( point != null ){
-                                if ((((chartBounds.left + point.left) >= (mx - point.width)) &&
-                                     ((chartBounds.left + point.left + point.width) <= (mx + point.width))) &&
-                                    (((chartBounds.top + point.top) >= (my - point.height)) &&
-                                     ((chartBounds.top + point.top + point.height) <= (my + point.height)))) {
+                                if ((( (chartBounds.left + point.left + point.width) >= mx ) &&
+                                     ( (chartBounds.left + point.left) <= mx )) &&
+                                    (( (chartBounds.top + point.top + point.height) >= my ) &&
+                                     ( (chartBounds.top + point.top) <= my ))) {
                                   selection.push({row: row, column: col});
                                 }
                             }
@@ -225,46 +875,60 @@
                 
                     if( selection.length > 0 ){
                         var item = selection[0];
-                        selectedPoint = selection[0];
+                        chart.getOptions().selectedPt = selection[0];
                     } else {
-                        selectedPoint = null;
+                        chart.getOptions().selectedPt = null;
                     }
                     
-                    myScatterChart.getChart().setSelection( selection );
+                    chart.getChart().setSelection( selection );
                 }
             }
             
-            function mouseMoveScript( e ){
+            // return our event handler while capturing an argument in the closure
+            function handleMouseMove( chart ) {
+                return function(e){ mouseMoveScript( e, chart ); };
+            }
+            
+            function mouseMoveScript( e, chart ){
                 var x = e.clientX;
                 var y = e.clientY;
                 var coor = "Coordinates: (" + x + "," + y + ")";
                 document.getElementById("output").innerHTML = coor;
-                if( selectedPoint != null ){
-                    var chartContainer  = document.getElementById( myScatterChart.getContainerId() );
-                    var chartBounds    = chartContainer.getBoundingClientRect();
-                    var chartLayout     = myScatterChart.getChart().getChartLayoutInterface()
+                if( chart.getOptions().selectedPt != null ){
+                    var chartContainer  = document.getElementById( chart.getContainerId() );
+                    var chartBounds     = chartContainer.getBoundingClientRect();
+                    var chartLayout     = chart.getChart().getChartLayoutInterface()
                     var chartAreaBounds = chartLayout.getChartAreaBoundingBox();
                     var chartMinX       = chartLayout.getHAxisValue( chartAreaBounds.left );
                     var chartMaxX       = chartLayout.getHAxisValue( chartAreaBounds.left + chartAreaBounds.width );
                     var chartMinY       = chartLayout.getVAxisValue( chartAreaBounds.top + chartAreaBounds.height );
                     var chartMaxY       = chartLayout.getVAxisValue( chartAreaBounds.top );
                     
-                    var dataTable = myScatterChart.getDataTable();
+                    var dataTable = chart.getDataTable();
                     var spX = ( x - chartBounds.left - chartAreaBounds.left ) / chartAreaBounds.width  * ( chartMaxX - chartMinX ) + chartMinX;
                     var spY = ( chartAreaBounds.height - ( y - chartBounds.top  - chartAreaBounds.top ) ) / chartAreaBounds.height * ( chartMaxY - chartMinY ) + chartMinY;
-                    dataTable.setValue( selectedPoint.row, 0, spX );
-                    dataTable.setValue( selectedPoint.row, selectedPoint.column, spY );
-                    calcAllEllipses();
+                    dataTable.setValue( chart.getOptions().selectedPt.row, 0, spX );
+                    dataTable.setValue( chart.getOptions().selectedPt.row, chart.getOptions().selectedPt.column, spY );
+                    if( chart == myScatterChartEllipse ){
+                        calcEllipses();
+                    } else if( chart == myScatterChartSinCos ){
+                        calcSinCos();
+                    }
                 }
             }
             
-            function mouseDownScript( e ){
+            // return our event handler while capturing an argument in the closure
+            function handleMouseDown( chart ) {
+                return function(e){ mouseDownScript( e, chart ); };
+            }
+            
+            function mouseDownScript( e, chart ){
                 var mx = e.clientX;
                 var my = e.clientY;
                 
                 if( e.target ){
                     targ = e.target;
-                    selectPoints( mx, my );
+                    selectPoints( chart, mx, my );
                 } else if (e.srcElement) {
                     targ = e.srcElement;
                 }
@@ -272,9 +936,14 @@
                 tname = targ.tagName;
             }
             
-            function mouseUpScript( e ){
-                if( selectedPoint != null ){
-                    selectedPoint = null;
+            // return our event handler while capturing an argument in the closure
+            function handleMouseUp( chart ) {
+                return function(e){ mouseUpScript( e, chart ); };
+            }
+            
+            function mouseUpScript( e, chart ){
+                if( chart.getOptions().selectedPt != null ){
+                    chart.getOptions().selectedPt = null;
                 }
             }
         </script>
@@ -285,7 +954,22 @@
         <button onclick="runLeastSquaresTest()">Run Least Squares Test</button> 
         <div id="output"></div>
         <div>
-            <div id="exampleChart"  style="width: 900px; height: 500px;"></div>
+            <div id="ellipseChart"  style="width: 900px; height: 500px;"></div>
+        </div>
+        <div>
+            <div id="sinCosChart"  style="width: 900px; height: 500px;"></div>
+        </div><br>
+        <div>
+            <div id="plane3DChart"></div>
+        </div><br>
+        <div>
+            <div id="poly3DChart"></div>
+        </div>
+        <div>
+            <div id="star3DChart"></div>
+        </div>
+        <div>
+            <div id="unitSphereTest"></div>
         </div>
     </body>
 </html>
