@@ -322,9 +322,9 @@
                 calcEllipses();
                 calcSinCos();
                 
-                //------------------------------------
-                // Test for 3D Line and Plane Fitting
-                //------------------------------------
+                //----------------------------------------------
+                // Test for Line and Plane Fitting to 3D Points
+                //----------------------------------------------
                 
                 // Set up a 3D plotly plot
                 var x3D = [ -0.549, -0.459, -0.391, -0.495, -0.429, -0.289, -0.119, -0.296, -0.132, -0.158, 0.118, 0.052, 0.035, 0.055, 0.244, 0.180, 0.448, 0.306, 0.347, 0.413, 0.641 ];
@@ -334,7 +334,7 @@
                 var ls3DLine = new LeastSquares( x3D, y3D, z3D );
                 var lineParams = ls3DLine.line3D();
                 console.log( lineParams.A );
-                var planeParams = ls3DLine.plane3D();
+                var planeParams = ls3DLine.plane();
 
                 var scatterPts3D = {
                     type: 'scatter3d',
@@ -375,9 +375,9 @@
                     }
                 };
                 
-                var xPlane3D = [];
-                var yPlane3D = [];
-                var zPlane3D = [];
+                var xPlane = [];
+                var yPlane = [];
+                var zPlane = [];
                 var x3DMax = Math.max.apply( Math, x3D );
                 var x3DMin = Math.min.apply( Math, x3D );
                 var y3DMax = Math.max.apply( Math, y3D );
@@ -386,23 +386,23 @@
                 var yDelta = ( y3DMax - y3DMin ) / 10;
                 for( var x = x3DMin; x <= x3DMax; x += xDelta ){
                     for( var y = y3DMin; y <= y3DMax; y += yDelta ){
-                        xPlane3D.push( x );
-                        yPlane3D.push( y );
-                        zPlane3D.push( planeParams.A[0][0] * x + planeParams.A[1][0] * y + planeParams.A[2][0] );
+                        xPlane.push( x );
+                        yPlane.push( y );
+                        zPlane.push( planeParams.A[0][0] * x + planeParams.A[1][0] * y + planeParams.A[2][0] );
                     }
                 }
                 
-                var planePts3D = {
+                var planePts = {
                     type: 'mesh3d',
                     opacity: 0.5,
-                    x: xPlane3D,
-                    y: yPlane3D,
-                    z: zPlane3D,
-                    intensity: zPlane3D,
+                    x: xPlane,
+                    y: yPlane,
+                    z: zPlane,
+                    intensity: zPlane,
                     colorscale: 'Viridis'
                 };
 
-                var data = [ scatterPts3D, linePts3D, planePts3D ];
+                var data = [ scatterPts3D, linePts3D, planePts ];
                 var layout = {
                     title: '3D Line and Plane Fits',
                     margin: {
@@ -423,29 +423,29 @@
                     width: 500
                 };
                 
-                Plotly.newPlot( 'plane3DChart', data, layout, { scrollZoom: false } );
+                Plotly.newPlot( 'planeChart', data, layout, { scrollZoom: false } );
                 
-                //----------------------------------------
-                // Test for 3D Polynomial Surface Fitting
-                //----------------------------------------
+                //-----------------------------------------------------
+                // Test for 2D Polynomial Surface Fitting Over 3D Data
+                //-----------------------------------------------------
                 
                 // Setup another plotly plot to show multi-dimensional polynomial curve fitting
-                var x3DPoly = [ -0.463, -0.042, 0.327, -0.153, 0.317, 0.139, -0.242, -0.362, -0.002, -0.451, 0.065, 0.077, 0.095, -0.005, -0.250, 0.145, 0.286, -0.013, -0.479, 0.356, 0.356, 0.436, -0.485, -0.186, 0.179, -0.229 ];
-                var y3DPoly = [ -0.206, -0.462, 0.455, -0.364, -0.175, 0.226, -0.224, -0.192, 0.260, 0.034, -0.229, 0.187, -0.198, 0.388, 0.384, 0.297, -0.481, -0.109, 0.260, 0.392, 0.361, 0.194, -0.165, 0.251, 0.490, 0.231 ];
-                var z3DPoly = [ -0.084, -0.237, 0.157, -0.328, -0.187, 0.116, 0.220, -0.167, 0.170, -0.050, -0.109, 0.424, 0.190, 0.227, 0.064, -0.447, 0.060, -0.167, 0.057, -0.286, -0.160, -0.100, 0.387, -0.172, -0.066, 0.079 ];
+                var xPoly2D = [ -0.463, -0.042, 0.327, -0.153, 0.317, 0.139, -0.242, -0.362, -0.002, -0.451, 0.065, 0.077, 0.095, -0.005, -0.250, 0.145, 0.286, -0.013, -0.479, 0.356, 0.356, 0.436, -0.485, -0.186, 0.179, -0.229 ];
+                var yPoly2D = [ -0.206, -0.462, 0.455, -0.364, -0.175, 0.226, -0.224, -0.192, 0.260, 0.034, -0.229, 0.187, -0.198, 0.388, 0.384, 0.297, -0.481, -0.109, 0.260, 0.392, 0.361, 0.194, -0.165, 0.251, 0.490, 0.231 ];
+                var zPoly2D = [ -0.084, -0.237, 0.157, -0.328, -0.187, 0.116, 0.220, -0.167, 0.170, -0.050, -0.109, 0.424, 0.190, 0.227, 0.064, -0.447, 0.060, -0.167, 0.057, -0.286, -0.160, -0.100, 0.387, -0.172, -0.066, 0.079 ];
                 
-                var ls3DLine = new LeastSquares( x3DPoly, y3DPoly, z3DPoly );
+                var ls3DLine = new LeastSquares( xPoly2D, yPoly2D, zPoly2D );
                 var polyParam = {};
-                var polyRes = ls3DLine.poly3D( 5, 2, polyParam );
+                var polyRes = ls3DLine.poly2D( 3, 3, polyParam );
                 console.log( polyParam );
                 console.log( polyRes );
 
-                var polyScatterPts3D = {
+                var poly2DScatterPts = {
                     type: 'scatter3d',
                     mode: 'markers',
-                    x: x3DPoly,
-                    y: y3DPoly,
-                    z: z3DPoly,
+                    x: xPoly2D,
+                    y: yPoly2D,
+                    z: zPoly2D,
                     marker: {
                         size: 12,
                         line: {
@@ -456,19 +456,19 @@
                     }
                 };
                 
-                var xPolySurf3D = [];
-                var yPolySurf3D = [];
-                var zPolySurf3D = [];
-                var x3DMaxPoly = Math.max.apply( Math, x3DPoly );
-                var x3DMinPoly = Math.min.apply( Math, x3DPoly );
-                var y3DMaxPoly = Math.max.apply( Math, y3DPoly );
-                var y3DMinPoly = Math.min.apply( Math, y3DPoly );
-                var xDeltaPoly = ( x3DMaxPoly - x3DMinPoly ) / 10;
-                var yDeltaPoly = ( y3DMaxPoly - y3DMinPoly ) / 10;
-                for( var x = x3DMinPoly; x <= x3DMaxPoly; x += xDeltaPoly ){
-                    for( var y = y3DMinPoly; y <= y3DMaxPoly; y += yDeltaPoly ){
-                        xPolySurf3D.push( x );
-                        yPolySurf3D.push( y );
+                var xPoly2DSurf = [];
+                var yPoly2DSurf = [];
+                var zPoly2DSurf = [];
+                var xMaxPoly2D = Math.max.apply( Math, xPoly2D );
+                var xMinPoly2D = Math.min.apply( Math, xPoly2D );
+                var yMaxPoly2D = Math.max.apply( Math, yPoly2D );
+                var yMinPoly2D = Math.min.apply( Math, yPoly2D );
+                var xDeltaPoly2D = ( xMaxPoly2D - xMinPoly2D ) / 10;
+                var yDeltaPoly2D = ( yMaxPoly2D - yMinPoly2D ) / 10;
+                for( var x = xMinPoly2D; x <= xMaxPoly2D; x += xDeltaPoly2D ){
+                    for( var y = yMinPoly2D; y <= yMaxPoly2D; y += yDeltaPoly2D ){
+                        xPoly2DSurf.push( x );
+                        yPoly2DSurf.push( y );
                         var zRes = 0;
                         for( var param in polyParam ){
                             if( param == "C" ){
@@ -486,23 +486,23 @@
                                 zRes += value;
                             }
                         }
-                        zPolySurf3D.push( zRes );
+                        zPoly2DSurf.push( zRes );
                     }
                 }
                 
-                var polyPts3D = {
+                var poly2DPts = {
                     type: 'mesh3d',
                     opacity: 0.5,
-                    x: xPolySurf3D,
-                    y: yPolySurf3D,
-                    z: zPolySurf3D,
-                    intensity: zPolySurf3D,
+                    x: xPoly2DSurf,
+                    y: yPoly2DSurf,
+                    z: zPoly2DSurf,
+                    intensity: zPoly2DSurf,
                     colorscale: 'Viridis'
                 };
 
-                var dataPoly = [ polyScatterPts3D, polyPts3D ];
+                var dataPoly = [ poly2DScatterPts, poly2DPts ];
                 var layoutPoly = {
-                    title: '3D Multivariate Polynomial Curve Fit ( x => 1-5, y => 1-2 )',
+                    title: 'Multivariate Polynomial 2D Curve Fit',
                     margin: {
                         l: 0,
                         r: 0,
@@ -521,7 +521,7 @@
                     width: 500
                 };
                 
-                Plotly.newPlot( 'poly3DChart', dataPoly, layoutPoly, { scrollZoom: false } );
+                Plotly.newPlot( 'poly2DChart', dataPoly, layoutPoly, { scrollZoom: false } );
                 
                 //----------------------------
                 // Test for 3D Sphere Fitting
@@ -791,6 +791,180 @@
                 };
                 
                 Plotly.newPlot( 'star3DChart', dataStars, layoutStars );
+                
+                //-----------------------------------------------------
+                // Test for 3D Polynomial Volume Fitting Over 4D Data
+                //-----------------------------------------------------
+                
+                // Make some random data to test polynomial fits
+                var xRandPoly3D = [];
+                var yRandPoly3D = [];
+                var zRandPoly3D = [];
+                var wRandPoly3D = [];
+                var centerCnt = Math.floor( Math.random() * 10 + 3 );
+                for( var c = 0; c < centerCnt; c++ ){
+                    var xCen = Math.random() * 10 - 5;
+                    var yCen = Math.random() * 10 - 5;
+                    var zCen = Math.random() * 10 - 5;
+                    var centerPts = Math.floor( Math.random() * 30 + 4 );
+                    var cenRad = Math.random() * 3 + 1;
+                    var cenRadHalf = cenRad / 2;
+                    for( var cP = 0; cP < centerPts; cP++ ){
+                        xRandPoly3D.push( xCen + Math.random() * cenRad - cenRadHalf );
+                        yRandPoly3D.push( yCen + Math.random() * cenRad - cenRadHalf );
+                        zRandPoly3D.push( zCen + Math.random() * cenRad - cenRadHalf );
+                        wRandPoly3D.push( Math.random() );
+                    }
+                }
+                
+                var randPoly3DScatterPts = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: xRandPoly3D,
+                    y: yRandPoly3D,
+                    z: zRandPoly3D,
+                    marker: {
+                        color: wRandPoly3D,
+                        size: 3,
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5,
+                            opacity: 0.5
+                        },
+                        opacity: 1
+                    }
+                };
+                
+                var lsPoly3D = new LeastSquares( xRandPoly3D, yRandPoly3D, zRandPoly3D, wRandPoly3D );
+                //var lsPoly3D = new LeastSquares( x3DStars, y3DStars, z3DStars, radiusStars );
+                var poly3DParam = {};
+                var poly3DRes = lsPoly3D.poly3D( 4, 4, 4, poly3DParam );
+                console.log( poly3DParam );
+                console.log( poly3DRes );
+                
+                var xPoly3DVol = [];
+                var yPoly3DVol = [];
+                var zPoly3DVol = [];
+                var wPoly3DVol = [];
+                var sPoly3DVol = [];
+                var xMaxPoly3D = Math.max.apply( Math, xRandPoly3D );
+                var xMinPoly3D = Math.min.apply( Math, xRandPoly3D );
+                var yMaxPoly3D = Math.max.apply( Math, yRandPoly3D );
+                var yMinPoly3D = Math.min.apply( Math, yRandPoly3D );
+                var zMaxPoly3D = Math.max.apply( Math, zRandPoly3D );
+                var zMinPoly3D = Math.min.apply( Math, zRandPoly3D );
+                var minXYZPoly3D = Math.min.apply( Math, [ xMinPoly3D, yMinPoly3D, zMinPoly3D ] );
+                var maxXYZPoly3D = Math.max.apply( Math, [ xMaxPoly3D, yMaxPoly3D, zMaxPoly3D ] );
+                var poly3DSeg = 25;
+                var deltaPoly3D = ( maxXYZPoly3D - minXYZPoly3D ) / poly3DSeg;
+                var x = minXYZPoly3D;
+                var wResMin = 1000;
+                var wResMax = -1000;
+                for( var xi = 0; xi <= poly3DSeg; xi++ ){
+                    var y = minXYZPoly3D;
+                    for( var yi = 0; yi <= poly3DSeg; yi++ ){
+                        var z = minXYZPoly3D;
+                        for( var zi = 0; zi <= poly3DSeg; zi++ ){
+                            xPoly3DVol.push( x );
+                            yPoly3DVol.push( y );
+                            zPoly3DVol.push( z );
+                            var wRes = 0;
+                            for( var param in poly3DParam ){
+                                if( param == "C" ){
+                                    wRes += poly3DParam[ param ];
+                                } else {
+                                    var xyzList = param.split( '' );
+                                    var value = poly3DParam[ param ];
+                                    for( var xyz in xyzList ){
+                                        if( xyzList[xyz] == "x" ){
+                                            value *= x;
+                                        } else if( xyzList[xyz] == "y" ) {
+                                            value *= y;
+                                        } else {
+                                            value *= z;
+                                        }
+                                    }
+                                    wRes += value;
+                                }
+                            }
+                            var wResInv = 2/( 0.5 + wRes*wRes );
+                            wPoly3DVol.push( wResInv );
+                            sPoly3DVol.push( wResInv );
+                            z += deltaPoly3D;
+                        }
+                        y += deltaPoly3D;
+                    }
+                    x += deltaPoly3D;
+                }
+                
+                var poly3DPts = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: xPoly3DVol,
+                    y: yPoly3DVol,
+                    z: zPoly3DVol,
+                    marker: {
+                        size: sPoly3DVol,
+                        color: wPoly3DVol,
+                        colorscale: 'Jet',
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5
+                        },
+                        opacity: 0.8
+                    }
+                };
+
+                var dataPoly3D = [ randPoly3DScatterPts, poly3DPts ];
+                //var dataPoly3D = [ starScatterPts3D, poly3DPts ];
+                var layoutPoly3D = {
+                    title: 'Multivariate Polynomial 3D Curve Fit',
+                    scene:{
+                        aspectratio: {
+                            x: 1, y: 1, z: 1,
+                        },
+                        xaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [minXYZPoly3D, maxXYZPoly3D]
+                        }, 
+                        yaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [minXYZPoly3D, maxXYZPoly3D]
+                        },
+                        zaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [minXYZPoly3D, maxXYZPoly3D]
+                        }
+                    },
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    xaxis: {
+                        title: 'x-axis'
+                    },
+                    yaxis: {
+                        title: 'y-axis'
+                    },
+                    zaxis: {
+                        title: 'z-axis'
+                    },
+                    height: 800,
+                    width: 800
+                };
+                
+                Plotly.newPlot( 'poly3DChart', dataPoly3D, layoutPoly3D );
             }
             
             function makeInterval( startValue, stopValue, numPoints ) {
@@ -960,16 +1134,16 @@
             <div id="sinCosChart"  style="width: 900px; height: 500px;"></div>
         </div><br>
         <div>
-            <div id="plane3DChart"></div>
+            <div id="planeChart"></div>
         </div><br>
         <div>
-            <div id="poly3DChart"></div>
+            <div id="poly2DChart"></div>
         </div>
         <div>
             <div id="star3DChart"></div>
         </div>
         <div>
-            <div id="unitSphereTest"></div>
+            <div id="poly3DChart"></div>
         </div>
     </body>
 </html>
