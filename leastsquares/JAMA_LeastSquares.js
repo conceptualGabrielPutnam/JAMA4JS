@@ -12,13 +12,14 @@ var LeastSquares = /** @class */ (function () {
     * Basic constructor
     * @return Return values
     */
-    function LeastSquares( x, y, z=null ){
+    function LeastSquares( x, y, z=null, w=null ){
         if( x.length != y.length ){
             console.log( "arrays must be the same length" );
         }
         this.x = x;
         this.y = y;
         this.z = z;
+        this.w = w;
     }
     
     /**
@@ -76,7 +77,7 @@ var LeastSquares = /** @class */ (function () {
     * General purpose of the method
     * @return Return values
     */
-    LeastSquares.prototype.plane3D = function(){
+    LeastSquares.prototype.plane = function(){
         var A = [];
         var B = [];
         for( var i = 0; i < this.x.length; i++ ){
@@ -137,7 +138,7 @@ var LeastSquares = /** @class */ (function () {
     * General purpose of the method
     * @return Return values
     */
-    LeastSquares.prototype.poly3D = function ( degreeX, degreeY, polyParam = -1 ){
+    LeastSquares.prototype.poly2D = function ( degreeX, degreeY, polyParam = -1 ){
         var A = [];
         var B = [];
         var degreeMax = Math.max( degreeX, degreeY );
@@ -147,21 +148,6 @@ var LeastSquares = /** @class */ (function () {
             A[i] = [];
             B[i] = [];
             var pIndex = 0;
-            // Setup individual terms for X and Y (x, x2, x3, ect... y, y2, y3, ect...)
-            A[i][pIndex++] = 1;
-            for( var dX = 1; dX <= degreeX; dX++ ){
-                A[i][pIndex] = A[i][pIndex-1] * this.x[i];
-                pIndex++;
-            }
-            for( var dY = 1; dY <= degreeY; dY++ ){
-                if( dY == 1 ){
-                    A[i][pIndex++] = this.y[i];
-                } else {
-                    A[i][pIndex] = A[i][pIndex-1] * this.y[i];
-                    pIndex++;
-                }
-            }
-            
             // Setup the combination terms
             // 1,1 = {}
             // 2,1 || 1,2 || 2,2 = { xy }
@@ -173,10 +159,10 @@ var LeastSquares = /** @class */ (function () {
             // 4,2 = { xy, x2y, xy2, x3y, x2y2 }
             // 2,4 = { xy, x2y, xy2, xy3, x2y2 }
             // 4,3 || 3,4 || 4,4 = { xy, x2y, xy2, x3y, x2y2, xy3 }
-            var xTerm = this.x[i];
-            for( var dX = 1; dX <= degreeX; dX++ ){
-                var yTerm = this.y[i];
-                for( var dY = 1; dY <= degreeY; dY++ ){
+            var xTerm = 1;
+            for( var dX = 0; dX <= degreeX; dX++ ){
+                var yTerm = 1;
+                for( var dY = 0; dY <= degreeY; dY++ ){
                     if( dX+dY <= degreeMax ){
                         A[i][pIndex++] = xTerm * yTerm;
                     }
@@ -194,25 +180,115 @@ var LeastSquares = /** @class */ (function () {
         // If this has an optional return parameter, then fill out the optional return parameters
         if( polyParam != -1 ){
             // Setup individual terms for X and Y (x, x2, x3, ect... y, y2, y3, ect...)
-            var propNames = [ "C" ];
-            var xName = "x";
-            for( var dX = 1; dX <= degreeX; dX++ ){
-                propNames.push( xName );
-                xName += "x";
-            }
-            var yName = "y";
-            for( var dY = 1; dY <= degreeY; dY++ ){
-                propNames.push( yName );
-                yName += "y";
-            }
+            var propNames = [];
             // Setup the combination terms
-            var xTerm = "x";
+            var xTerm = "";
             var yTerm;
-            for( var dX = 1; dX <= degreeX; dX++ ){
-                yTerm = "y";
-                for( var dY = 1; dY <= degreeY; dY++ ){
+            for( var dX = 0; dX <= degreeX; dX++ ){
+                yTerm = "";
+                for( var dY = 0; dY <= degreeY; dY++ ){
                     if( dX+dY <= degreeMax ){
-                        propNames.push( xTerm + yTerm );
+                        if( dX+dY == 0 ){
+                            propNames.push( "C" );
+                        } else {
+                            propNames.push( xTerm + yTerm );
+                        }
+                    }
+                    yTerm += "y";
+                }
+                xTerm += "x";
+            }
+            for( var n = 0; n < propNames.length; n++ ){
+                polyParam[ propNames[n] ] = res.A[n][0];
+            }
+        }
+        
+        return res;
+    };
+    
+    /**
+    * General purpose of the method
+    * @return Return values
+    */
+    LeastSquares.prototype.poly3D = function ( degreeX, degreeY, degreeZ, polyParam = -1 ){
+        if( this.z == null ){
+            console.log( "ERROR: No Z Data, cannot compute 3D polynomial" );
+            return null;
+        }
+        if( this.w == null ){
+            console.log( "WARNING: No W Data, setting all W values to 1." );
+            this.w = [];
+            for( var i = 0; i < this.x.length; i++ ){
+                this.w.push( 1 );
+            }
+        }
+        var A = [];
+        var B = [];
+        var degreeMax = Math.max( Math.max( degreeX, degreeY ), degreeZ );
+        var dXm1 = degreeX-1;
+        var dYm1 = degreeY-1;
+        var dZm1 = degreeZ-1;
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            B[i] = [];
+            var pIndex = 0;
+            // Setup the combination terms
+            // 1,1,1 = {}
+            // 2,1,1 || 1,2,1 || 1,1,2 || 2,2,1 || 2,1,2 || 1,2,2 || 2,2,2 = { xy, xz, yz }
+            // 3,1,1 = { xy, xz, yz, xxy, xxz, xyz }
+            // 1,3,1 = { xy, xz, yz, xyy, yyz, xyz }
+            // 1,1,3 = { xy, xz, yz, xzz, yzz, xyz }
+            // 3,2,1 || 2,3,1 || 3,3,1 = { xy, xz, yz, xxy, xxz, xyy, yyz, xyz }
+            // 3,1,2 || 2,1,3 || 3,1,3 = { xy, xz, yz, xxy, xxz, xzz, yzz, xyz }
+            // 1,3,2 || 1,2,3 || 1,3,3 = { xy, xz, yz, xyy, yyz, xzz, yzz, xyz }
+            // 3,3,2 || 3,2,3 || 2,3,3 = { xy, xz, yz, xxy, xxz, xyy, yyz, xzz, yzz, xyz }
+            // 4,1,1 = { xy, xz, yz, xxy, xxz, xyz, xxxy, xxxz, xxyz }
+            // 1,4 = { xy, xz, yz, xyy, xyyy }
+            // 4,2 = { xy, xxy, xyy, xxxy, xxyy }
+            // 2,4 = { xy, xxy, xyy, xyyy, xxyy }
+            // 4,3 || 3,4 || 4,4 = { xy, x2y, xy2, x3y, x2y2, xy3 }
+            var xTerm = 1;
+            for( var dX = 0; dX <= degreeX; dX++ ){
+                var yTerm = 1;
+                for( var dY = 0; dY <= degreeY; dY++ ){
+                    var zTerm = 1;
+                    for( var dZ = 0; dZ <= degreeZ; dZ++ ){
+                        if( dX+dY+dZ <= degreeMax ){
+                            A[i][pIndex++] = xTerm * yTerm * zTerm;
+                        }
+                        zTerm *= this.z[i];
+                    }
+                    yTerm *= this.y[i];
+                }
+                xTerm *= this.x[i];
+            }
+            B[i][0] = this.w[i];
+        }
+        
+        A = new Matrix( A );
+        B = new Matrix( B );
+        var res = A.solve(B);
+        
+        // If this has an optional return parameter, then fill out the optional return parameters
+        if( polyParam != -1 ){
+            // Setup individual terms for X and Y (x, x2, x3, ect... y, y2, y3, ect...)
+            var propNames = [];
+            // Setup the combination terms
+            var xTerm = "";
+            var yTerm;
+            for( var dX = 0; dX <= degreeX; dX++ ){
+                yTerm = "";
+                for( var dY = 0; dY <= degreeY; dY++ ){
+                    zTerm = "";
+                    for( var dZ = 0; dZ <= degreeZ; dZ++ ){
+                        if( dX+dY+dZ <= degreeMax ){
+                            if( dX+dY+dZ == 0 ){
+                                propNames.push( "C" );
+                            } else {
+                                propNames.push( xTerm + yTerm + zTerm );
+                            }
+                        }
+                        zTerm += "z";
                     }
                     yTerm += "y";
                 }
