@@ -129,7 +129,7 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 - Added the ability for LeastSquares 3D Polynomial fits to 3D and 4D data
 - Updated JAMA_Test.html and LeastSquares files with 3D polynomial fit example
 ### Example of 3D Polynomial Least Squares Fitting
-<img src='./misc/Poly3DExample.gif'>
+![Poly3DExample](misc/Poly3DExample.gif)
 - Included as example in the JAMA_Test.html
 - Shows 3D polynomial fitting for randomly generated clumps of data poly3D(4,4,4)
   - C, x, xx, xxx, xxxx, xxxy, xxxz, xxy, xxyy, xxyz, xxz, xxzz, xy, xyy, xyyy, xyyz, xyz, xyzz, xz, xzz, xzzz, y, yy, yyy, yyyy, yyyz, yyz, yyzz, yz, yzz, yzzz, z, zz, zzz, zzzz
