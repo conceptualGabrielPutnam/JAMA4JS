@@ -113,16 +113,24 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 ![LinePlane3D](https://i.imgur.com/r9YzJLxm.png)
 - Included as example in the JAMA_Test.html
 - Shows curve fitting for a 3D line and 3D plane with scatter data (obvious skew to check for alignment)
-### Example of 3D Polynomial Least Squares Fitting
-![Poly3D](https://i.imgur.com/sJsEySZm.png)
+### Example of 2D Polynomial Least Squares Fitting
+![Poly2D](https://i.imgur.com/sJsEySZm.png)
 - Included as example in the JAMA_Test.html
 - Shows curve fitting for poly(5,2)
   - f(C, x, xx, xxx, xxxx, xxxxx, xxxxy, xxxy, xxxyy, xxy, xxyy, xy xyy, y, yy)
 ## Edit 12/30/2022
 - Added the ability for 3D LeastSquares sphere fits to 3D data
-- Updated JAMA_Test.html with 3D sphere fit example
-- Updated LeastSquares files with 3D sphere fitting
-### Example of 3D Polynomial Least Squares Fitting
+- Updated JAMA_Test.html and LeastSquares files with 3D sphere fit example
+### Example of 3D Sphere Least Squares Fitting
 ![Sphere3D](https://i.imgur.com/AWKZPepm.png)
 - Included as example in the JAMA_Test.html
 - Shows 3D sphere fitting for all stars within 100 LY of Earth
+## Edit 1/2/2023
+- Added the ability for LeastSquares 3D Polynomial fits to 3D and 4D data
+- Updated JAMA_Test.html and LeastSquares files with 3D polynomial fit example
+### Example of 3D Polynomial Least Squares Fitting
+![Sphere3D](https://i.imgur.com/AWKZPepm.png)
+- Included as example in the JAMA_Test.html
+- Shows 3D polynomial fitting for randomly generated clumps of data poly3D(4,4,4)
+  - C, x, xx, xxx, xxxx, xxxy, xxxz, xxy, xxyy, xxyz, xxz, xxzz, xy, xyy, xyyy, xyyz, xyz, xyzz, xz, xzz, xzzz, y, yy, yyy, yyyy, yyyz, yyz, yyzz, yz, yzz, yzzz, z, zz, zzz, zzzz
+https://i.imgur.com/ZO4UUhA.gifv
