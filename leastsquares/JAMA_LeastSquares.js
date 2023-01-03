@@ -507,6 +507,66 @@ var LeastSquares = /** @class */ (function () {
     * General purpose of the method
     * @return Return values
     */
+    LeastSquares.prototype.sinCos2DLinFreq = function ( degreeX, degreeY, stFreq=[1.0,1.0], freqStep=[1.0,1.0] ){
+        var A = [];
+        var B = [];
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            B[i] = [];
+            B[i][0] = this.z[i];
+            A[i][0] = 1;
+            var freqMult = stFreq.slice();;
+            var index = 1;
+            for( var dx = 0; dx < degreeX; dx++ ){
+                A[i][index++] = Math.sin( this.x[i] * freqMult[0] );
+                A[i][index++] = Math.cos( this.x[i] * freqMult[0] );
+                freqMult[0] += freqStep[0];
+            }
+            for( var dy = 0; dy < degreeY; dy++ ){
+                A[i][index++] = Math.sin( this.y[i] * freqMult[1] );
+                A[i][index++] = Math.cos( this.y[i] * freqMult[1] );
+                freqMult[1] += freqStep[1];
+            }
+        }
+        A = new Matrix( A );
+        B = new Matrix( B );
+        return A.solve(B);
+    };
+    
+    /**
+    * General purpose of the method
+    * @return Return values
+    */
+    LeastSquares.prototype.sinCos2DExpFreq = function ( degreeX, degreeY, stFreq=[1.0,1.0], freqExpRate=[2.0,2.0] ){
+        var A = [];
+        var B = [];
+        for( var i = 0; i < this.x.length; i++ ){
+            A[i] = [];
+            B[i] = [];
+            B[i][0] = this.z[i];
+            A[i][0] = 1;
+            var freqMult = stFreq.slice();
+            var index = 1;
+            for( var dx = 0; dx < degreeX; dx++ ){
+                A[i][index++] = Math.sin( this.x[i] * freqMult[0] );
+                A[i][index++] = Math.cos( this.x[i] * freqMult[0] );
+                freqMult[0] *= freqExpRate[0];
+            }
+            for( var dy = 0; dy < degreeY; dy++ ){
+                A[i][index++] = Math.sin( this.y[i] * freqMult[1] );
+                A[i][index++] = Math.cos( this.y[i] * freqMult[1] );
+                freqMult[1] *= freqExpRate[1];
+            }
+        }
+        A = new Matrix( A );
+        B = new Matrix( B );
+        return A.solve(B);
+    };
+    
+    /**
+    * General purpose of the method
+    * @return Return values
+    */
     LeastSquares.prototype.ellipse = function (){
         
     };
