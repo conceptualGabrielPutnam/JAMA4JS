@@ -434,9 +434,9 @@
                 var yPoly2D = [ -0.206, -0.462, 0.455, -0.364, -0.175, 0.226, -0.224, -0.192, 0.260, 0.034, -0.229, 0.187, -0.198, 0.388, 0.384, 0.297, -0.481, -0.109, 0.260, 0.392, 0.361, 0.194, -0.165, 0.251, 0.490, 0.231 ];
                 var zPoly2D = [ -0.084, -0.237, 0.157, -0.328, -0.187, 0.116, 0.220, -0.167, 0.170, -0.050, -0.109, 0.424, 0.190, 0.227, 0.064, -0.447, 0.060, -0.167, 0.057, -0.286, -0.160, -0.100, 0.387, -0.172, -0.066, 0.079 ];
                 
-                var ls3DLine = new LeastSquares( xPoly2D, yPoly2D, zPoly2D );
+                var ls2DPoly = new LeastSquares( xPoly2D, yPoly2D, zPoly2D );
                 var polyParam = {};
-                var polyRes = ls3DLine.poly2D( 3, 3, polyParam );
+                var polyRes = ls2DPoly.poly2D( 3, 3, polyParam );
                 console.log( polyParam );
                 console.log( polyRes );
 
@@ -522,6 +522,131 @@
                 };
                 
                 Plotly.newPlot( 'poly2DChart', dataPoly, layoutPoly, { scrollZoom: false } );
+                
+                //-----------------------------------------------------
+                // Test for 2D Sin Cos Surface Fitting Over 3D Data
+                //-----------------------------------------------------
+                
+                var xSinCos2D = [];
+                var ySinCos2D = [];
+                var zSinCos2D = [];
+                
+                var sinCosPtCnt = 100;
+                for( var pt = 0; pt < sinCosPtCnt; pt++ ){
+                    xSinCos2D.push( Math.random()*10 - 5 );
+                    ySinCos2D.push( Math.random()*10 - 5 );
+                    zSinCos2D.push( Math.random()*10 - 5 );
+                }
+                
+                var lsSinCos2D = new LeastSquares( xSinCos2D, ySinCos2D, zSinCos2D );
+                
+                var scDegX = 5;
+                var scDegY = 5;
+                var scFreqSt      = [0.5,0.5];
+                var scFreqStep    = scFreqSt.slice();
+                var scFreqExpRamp = [2.0,2.0];
+                var sinCos2DResLin = lsSinCos2D.sinCos2DLinFreq( scDegX, scDegY, scFreqSt, scFreqStep );
+                var sinCos2DResExp = lsSinCos2D.sinCos2DExpFreq( scDegX, scDegY, scFreqSt, scFreqExpRamp );
+                
+                var xSinCos2DSurf = [];
+                var ySinCos2DSurf = [];
+                var zSinCos2DSurfLin = [];
+                var zSinCos2DSurfExp = [];
+                
+                for( var x = -5; x <= 5; x += 0.1 ){
+                    for( var y = -5; y <= 5; y += 0.1 ){
+                        xSinCos2DSurf.push( x );
+                        ySinCos2DSurf.push( y );
+                        var zResLin = 0;
+                        var zResExp = 0;
+                        zResLin += sinCos2DResLin.A[0][0];
+                        zResExp += sinCos2DResExp.A[0][0];
+                        var resIndLin = 1;
+                        var resIndExp = 1;
+                        var freqMultLin = scFreqSt.slice();
+                        var freqMultExp = scFreqSt.slice();
+                        for( var dx = 0; dx < scDegX; dx++ ){
+                            zResLin += sinCos2DResLin.A[resIndLin++][0] * Math.sin( x * freqMultLin[0] );
+                            zResLin += sinCos2DResLin.A[resIndLin++][0] * Math.cos( x * freqMultLin[0] );
+                            zResExp += sinCos2DResExp.A[resIndExp++][0] * Math.sin( x * freqMultExp[0] );
+                            zResExp += sinCos2DResExp.A[resIndExp++][0] * Math.cos( x * freqMultExp[0] );
+                            freqMultLin[0] += scFreqStep[0];
+                            freqMultExp[0] *= scFreqExpRamp[0];
+                        }
+                        for( var dy = 0; dy < scDegY; dy++ ){
+                            zResLin += sinCos2DResLin.A[resIndLin++][0] * Math.sin( y * freqMultLin[1] );
+                            zResLin += sinCos2DResLin.A[resIndLin++][0] * Math.cos( y * freqMultLin[1] );
+                            zResExp += sinCos2DResExp.A[resIndExp++][0] * Math.sin( y * freqMultExp[1] );
+                            zResExp += sinCos2DResExp.A[resIndExp++][0] * Math.cos( y * freqMultExp[1] );
+                            freqMultLin[1] += scFreqStep[1];
+                            freqMultExp[1] *= scFreqExpRamp[1];
+                        }
+                        zSinCos2DSurfLin.push( zResLin );
+                        zSinCos2DSurfExp.push( zResExp );
+                    }
+                }
+                
+                var sinCos2DScatterPts = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: xSinCos2D,
+                    y: ySinCos2D,
+                    z: zSinCos2D,
+                    marker: {
+                        size: 5,
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5
+                        },
+                        opacity: 0.8
+                    }
+                };
+                
+                var sinCos2DLinPts = {
+                    type: 'mesh3d',
+                    opacity: 0.5,
+                    x: xSinCos2DSurf,
+                    y: ySinCos2DSurf,
+                    z: zSinCos2DSurfLin,
+                    intensity: zSinCos2DSurfLin,
+                    colorscale: 'Viridis'
+                };
+                
+                var sinCos2DExpPts = {
+                    type: 'mesh3d',
+                    opacity: 0.5,
+                    x: xSinCos2DSurf,
+                    y: ySinCos2DSurf,
+                    z: zSinCos2DSurfExp,
+                    intensity: zSinCos2DSurfExp,
+                    colorscale: 'Jet'
+                };
+
+                var dataSinCos2DLin = [ sinCos2DScatterPts, sinCos2DLinPts ];
+                var dataSinCos2DExp = [ sinCos2DScatterPts, sinCos2DExpPts ];
+                
+                var layoutSinCos2D = {
+                    title: 'Multivariate Sin-Cos 2D Curve Fit',
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    xaxis: {
+                        title: 'x-axis',
+                        fixedrange:true
+                    },
+                    yaxis: {
+                        title: 'y-axis',
+                        fixedrange:true
+                    },
+                    height: 500,
+                    width: 500
+                };
+                
+                Plotly.newPlot( 'sinCos2DLinChart', dataSinCos2DLin, layoutSinCos2D, { scrollZoom: false } );
+                Plotly.newPlot( 'sinCos2DExpChart', dataSinCos2DExp, layoutSinCos2D, { scrollZoom: false } );
                 
                 //----------------------------
                 // Test for 3D Sphere Fitting
@@ -1138,6 +1263,12 @@
         </div><br>
         <div>
             <div id="poly2DChart"></div>
+        </div>
+        <div>
+            <div id="sinCos2DLinChart"></div>
+        </div>
+        <div>
+            <div id="sinCos2DExpChart"></div>
         </div>
         <div>
             <div id="star3DChart"></div>
