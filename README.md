@@ -132,5 +132,5 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 - Added the ability for LeastSquares 2D SinCos fits to 3D data
   - Linear and Exponential Frequency Variation with Terms
 ### Example of 2D SinCos Least Squares Fitting
-![SinCos2DLinAndExp](https://i.imgur.com/St8VkRsm.png)
+![SinCos2DLinAndExp](https://i.imgur.com/St8VkRsl.png)
 - Included as example in the JAMA_Test.html
