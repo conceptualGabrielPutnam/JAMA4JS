@@ -2,6 +2,7 @@
 The JAMA Linear Algebra package translated for use with Javascript
 
 This repository represents a conversion of the JAMA linear algebra library for use with Javascript.
+The leastSquares folder contains a number of optional utility functions for performing Least Squares regression over various dimensional datasets.
 
 ### Translation Source
 The initial commit of this library was created from the JAMA archive located at:
