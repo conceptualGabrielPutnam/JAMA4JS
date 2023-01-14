@@ -141,3 +141,13 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 ![EquationParseExample](https://i.imgur.com/isnshajm.png)
 - Included as example in the JAMA_Test.html
 - Shows fit for an equation input by the user
+## Edit 1/14/2023
+- Added examples for LeastSquares fits to arbitrary 2D and 3D functions on 3D and 4D data
+### Example of 2D Parsing Equation and Least Squares Fitting
+![EquationParse2DExample](https://i.imgur.com/4xn0nW4m.png)
+- Included as example in the JAMA_Test.html
+- Shows fit for an equation input by the user
+### Example of 3D Parsing Equation and Least Squares Fitting
+![EquationParse3DExample](https://i.imgur.com/ws9X7C3m.png)
+- Included as example in the JAMA_Test.html
+- Shows fit for an equation input by the user
