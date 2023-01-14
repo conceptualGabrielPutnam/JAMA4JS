@@ -4,7 +4,7 @@
         <script src="JAMA.min.js"></script>
         <script src="test/JAMA_Test.min.js"></script>
         <script src="example/JAMA_Example.min.js"></script>
-        <script src="leastsquares/JAMA_LeastSquares.min.js"></script>
+        <script src="leastsquares/JAMA_LeastSquares.js"></script>
         <script src="loader.js"></script>
         <script src="https://cdn.plot.ly/plotly-2.16.1.min.js"></script>
         <script>
@@ -1153,6 +1153,11 @@
                 Plotly.newPlot( 'poly3DChart', dataPoly3D, layoutPoly3D );
             }
             
+            //---------------------------------------
+            // Test of parsing an equation and then
+            // performing least squares on the terms
+            //---------------------------------------
+            
             var xEquationParse = [];
             var yEquationParse = [];
             
@@ -1165,13 +1170,8 @@
             var selectedPointEquationParse;
             
             var myEquationParseChart;
-            
+
             function runEquationParsingFitOn2DData(){
-                //---------------------------------------
-                // Test of parsing an equation and then
-                // performing least squares on the terms
-                //---------------------------------------
-                
                 google.charts.load('current', {'packages':['corechart']});
                 google.charts.setOnLoadCallback( initEquationParseChart );
                 
@@ -1226,6 +1226,260 @@
                     myEquationParseChart.draw();
                     calcEquationParseLeastSquares();
                 }
+            }
+            
+            //---------------------------------------
+            // Test of parsing an equation and then
+            // performing least squares on the terms
+            // for a 3D random data set
+            //---------------------------------------
+            
+            function run2DEquationParsingFitOn3DData(){
+                var xEquationParse2D = [];
+                var yEquationParse2D = [];
+                var zEquationParse2D = [];
+                
+                var equationParse2DPtCnt = 100;
+                for( var pt = 0; pt < equationParse2DPtCnt; pt++ ){
+                    xEquationParse2D.push( Math.random()*10 );
+                    yEquationParse2D.push( Math.random()*10 );
+                    zEquationParse2D.push( Math.random()*10 );
+                }
+                
+                var equationStr2D = document.getElementById( "inputEquation2D" ).value;
+                var lsEquation2D = new LeastSquares( xEquationParse2D, yEquationParse2D, zEquationParse2D );
+                var equationParam2D = {};
+                var equationRes2D = lsEquation2D.equationParse( equationStr2D, equationParam2D );
+                //console.log( equationParam );
+                
+                
+                var segments = 20;
+                var xIncr = 10 / segments;
+                var yIncr = 10 / segments;
+                
+                var indepData2D = {};
+                indepData2D[ "x" ] = [];
+                indepData2D[ "y" ] = [];
+                var locX = 0;
+                for( var xIndex = 0; xIndex <= segments; xIndex++ ){
+                    var locY = 0;
+                    for( var yIndex = 0; yIndex <= segments; yIndex++ ){
+                        indepData2D.x.push( locX );
+                        indepData2D.y.push( locY );
+                        locY += yIncr;
+                    }
+                    locX += xIncr;
+                }
+                
+                var dependData = {};
+                dependData[ "z" ] = lsEquation2D.equationParseEvaluate( equationStr2D, equationParam2D, indepData2D );
+                
+                var equationParse2DScatterPts = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: xEquationParse2D,
+                    y: yEquationParse2D,
+                    z: zEquationParse2D,
+                    marker: {
+                        size: 5,
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5
+                        },
+                        opacity: 0.8
+                    }
+                };
+                
+                var equationParse2DFitSurface = {
+                    type: 'mesh3d',
+                    opacity: 0.5,
+                    x: indepData2D.x,
+                    y: indepData2D.y,
+                    z: dependData.z,
+                    intensity: dependData.z,
+                    colorscale: 'Viridis'
+                };
+
+                var dataEquationParse2D = [ equationParse2DScatterPts, equationParse2DFitSurface ];
+                
+                var layoutEquationParse2D = {
+                    title: 'Equation Parsing for a 2D Curve Fit',
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    xaxis: {
+                        title: 'x-axis',
+                        fixedrange:true
+                    },
+                    yaxis: {
+                        title: 'y-axis',
+                        fixedrange:true
+                    },
+                    height: 500,
+                    width: 500
+                };
+                
+                Plotly.newPlot( 'equationParse2DChart', dataEquationParse2D, layoutEquationParse2D, { scrollZoom: false } );
+            }
+            
+            //---------------------------------------
+            // Test of parsing an equation and then
+            // performing least squares on the terms
+            // for a 4D random data set
+            //---------------------------------------
+            
+            function run3DEquationParsingFitOn4DData(){
+                var xEquationParse3D = [];
+                var yEquationParse3D = [];
+                var zEquationParse3D = [];
+                var wEquationParse3D = [];
+                
+                var centerCnt = Math.floor( Math.random() * 10 + 3 );
+                for( var c = 0; c < centerCnt; c++ ){
+                    var xCen = Math.random() * 10;
+                    var yCen = Math.random() * 10;
+                    var zCen = Math.random() * 10;
+                    var centerPts = Math.floor( Math.random() * 30 + 4 );
+                    var cenRad = Math.random() * 3 + 1;
+                    var cenRadHalf = cenRad / 2;
+                    for( var cP = 0; cP < centerPts; cP++ ){
+                        xEquationParse3D.push( xCen + Math.random() * cenRad - cenRadHalf );
+                        yEquationParse3D.push( yCen + Math.random() * cenRad - cenRadHalf );
+                        zEquationParse3D.push( zCen + Math.random() * cenRad - cenRadHalf );
+                        wEquationParse3D.push( Math.random() );
+                    }
+                }
+                
+                var equationStr3D = document.getElementById( "inputEquation3D" ).value;
+                var lsEquation3D = new LeastSquares( xEquationParse3D, yEquationParse3D, zEquationParse3D, wEquationParse3D );
+                var equationParam3D = {};
+                var equationRes3D = lsEquation3D.equationParse( equationStr3D, equationParam3D );
+                //console.log( equationParam );
+                
+                
+                var segments = 20;
+                var xIncr = 10 / segments;
+                var yIncr = 10 / segments;
+                var zIncr = 10 / segments;
+                
+                var indepData3D = {};
+                indepData3D[ "x" ] = [];
+                indepData3D[ "y" ] = [];
+                indepData3D[ "z" ] = [];
+                var locX = 0;
+                for( var xIndex = 0; xIndex <= segments; xIndex++ ){
+                    var locY = 0;
+                    for( var yIndex = 0; yIndex <= segments; yIndex++ ){
+                        var locZ = 0;
+                        for( var zIndex = 0; zIndex <= segments; zIndex++ ){
+                            indepData3D.x.push( locX );
+                            indepData3D.y.push( locY );
+                            indepData3D.z.push( locZ );
+                            locZ += zIncr;
+                        }
+                        locY += yIncr;
+                    }
+                    locX += xIncr;
+                }
+                
+                var dependData = {};
+                dependData[ "w" ] = lsEquation3D.equationParseEvaluate( equationStr3D, equationParam3D, indepData3D );
+                dependData[ "wInv" ] = [];
+                
+                for( var wIndex = 0; wIndex < dependData.w.length; wIndex++ ){
+                    var wRes = dependData.w[ wIndex ];
+                    dependData.wInv.push( 2/( 0.5 + wRes*wRes ) );
+                }
+                
+                var equationParse3DScatterPts = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: xEquationParse3D,
+                    y: yEquationParse3D,
+                    z: zEquationParse3D,
+                    marker: {
+                        color: wEquationParse3D,
+                        size: 3,
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5,
+                            opacity: 0.5
+                        },
+                        opacity: 1
+                    }
+                };
+                
+                var equationParse3DFitSurface = {
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: indepData3D.x,
+                    y: indepData3D.y,
+                    z: indepData3D.z,
+                    marker: {
+                        size: dependData.wInv,
+                        color: dependData.wInv,
+                        colorscale: 'Jet',
+                        line: {
+                            color: 'rgba(217, 217, 217, 0.14)',
+                            width: 0.5
+                        },
+                        opacity: 0.8
+                    }
+                };
+
+                var dataEquationParse3D = [ equationParse3DScatterPts, equationParse3DFitSurface ];
+                
+                var layoutEquationParse3D = {
+                    title: 'Equation Parsing for a 3D Curve Fit',
+                    scene:{
+                        aspectratio: {
+                            x: 1, y: 1, z: 1,
+                        },
+                        xaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [0, 10]
+                        }, 
+                        yaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [0, 10]
+                        },
+                        zaxis: {
+                            backgroundcolor: "rgb(0,0,0)",
+                            gridcolor: "rgb(255, 255, 255)",
+                            showbackground: true,
+                            zerolinecolor: "rgb(255, 255, 255)",
+                            range: [0, 10]
+                        }
+                    },
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    xaxis: {
+                        title: 'x-axis'
+                    },
+                    yaxis: {
+                        title: 'y-axis'
+                    },
+                    zaxis: {
+                        title: 'z-axis'
+                    },
+                    height: 800,
+                    width: 800
+                };
+                
+                Plotly.newPlot( 'equationParse3DChart', dataEquationParse3D, layoutEquationParse3D, { scrollZoom: false } );
             }
             
             function makeInterval( startValue, stopValue, numPoints ) {
@@ -1395,7 +1649,9 @@
         <button onclick="run2DSinCosFitsOn3DData()">Run 2D SinCos Fits (Linear Freq and Exp Freq) on 3D Data</button><br>
         <button onclick="run3DSpherFittingOnStarData()">Run 3D Ellipse Fitting on Nearby (100 LY) Stellar Data</button><br>
         <button onclick="run3DPolynomialFitOn4DData()">Run 3D Polynomial Fit on 4D Data</button><br>
-        <button onclick="runEquationParsingFitOn2DData()">Run Arbitrary Equation Fit on 2D Data</button><br>
+        <button onclick="runEquationParsingFitOn2DData()">Run Equation Fit on 2D Data</button><br>
+        <button onclick="run2DEquationParsingFitOn3DData()">Run 2D Equation Fit on 3D Data</button><br>
+        <button onclick="run3DEquationParsingFitOn4DData()">Run 3D Equation Fit on 4D Data</button><br>
         <div id="output"></div>
         <div>
             <div id="ellipseChart"></div>
@@ -1425,6 +1681,16 @@
         </textarea>
         <div>
             <div id="equationParseChart"></div>
+        </div><br>
+        <textarea id="inputEquation2D" name="inputEquation2D" rows="4" cols="100">CST + A*x*x + B*y*y + C*x*y + D*x + E*y + F*sin(x) + G*cos(x) + H*sin(y) + I*cos(y) + J*sin(x*x) + K*cos(x*x) + L*sin(y*y) + M*cos(y*y) + N*sin(x*y) + O*cos(x*y)
+        </textarea>
+        <div>
+            <div id="equationParse2DChart"></div>
+        </div><br>
+        <textarea id="inputEquation3D" name="inputEquation3D" rows="4" cols="100">CST + A*x*x + B*y*y + C*z*z + D*x*y + E*x*z + F*y*z + G*x + H*y + I*z
+        </textarea>
+        <div>
+            <div id="equationParse3DChart"></div>
         </div><br>
     </body>
 </html>
