@@ -189,10 +189,54 @@
                 myScatterChartSinCos.setDataTable( dataSinCos );
                 myScatterChartSinCos.draw();
             }
+            
+            function calcEquationParseLeastSquares(){
+                scatterDataEquationParse = [ [ 'X', 'Y', 'Equation' ] ];
+                for( var i = 0; i < xEquationParse.length; i++ ){
+                    xEquationParse[i] = dataEquationParse.getValue( i, 0 );
+                    yEquationParse[i] = dataEquationParse.getValue( i, 1 );
+                    scatterDataEquationParse.push( [ xEquationParse[i], yEquationParse[i], null ] );
+                }
+                
+                var equationStr = document.getElementById( "inputEquation" ).value;
+                var lsEquation = new LeastSquares( xEquationParse, yEquationParse );
+                var equationParam = {};
+                var equationRes = lsEquation.equationParse( equationStr, equationParam );
+                //console.log( equationParam );
+                
+                equationParseDataLS  = [];
+                var segments = 50;
+                var xMin     = optionsEquationParse.hAxis.viewWindow.min;
+                var xMax     = optionsEquationParse.hAxis.viewWindow.max;
+                var incr     = (xMax - xMin)/segments;
+                
+                var indepData = {};
+                indepData[ "x" ] = [];
+                var locX = xMin;
+                for( var i = 0; i <= segments; i++ ){
+                    indepData.x.push( locX );
+                    locX += incr;
+                }
+                
+                var dependData = {};
+                dependData[ "y" ] = lsEquation.equationParseEvaluate( equationStr, equationParam, indepData );
+                
+                for( var i = 0; i <= segments; i++ ){
+                    equationParseDataLS.push( [ indepData.x[ i ], null, dependData.y[i] ] );
+                }
+                
+                combinedDataEquationParse = scatterDataEquationParse.concat( equationParseDataLS );
+                dataEquationParse = google.visualization.arrayToDataTable( combinedDataEquationParse );
+                myEquationParseChart.setDataTable( dataEquationParse );
+                myEquationParseChart.draw();
+            }
         </script>
         <script>
-            google.charts.load('current', {'packages':['corechart']});
-            google.charts.setOnLoadCallback( initChart );
+            var xElp = [];
+            var yElp = [];
+            
+            var xSinCos = [];
+            var ySinCos = [];
             
             var myScatterChartEllipse;
             var myScatterChartSinCos;
@@ -200,128 +244,137 @@
             var selectedPointSinCos = null;
             var selectedPoint3D = null;
             
-            var xElp = [];
-            var yElp = [];
-            
-            var xSinCos = [];
-            var ySinCos = [];
-            
-            //var xSinCos = [ 0.037429811, 0.083488725, 0.137094865, 0.153523603, 0.173117839, 0.185711451, 0.187655207, 0.285912045, 0.288370293, 0.295974099, 0.300510972, 0.358703401, 0.401618916, 0.485386043, 0.510703949, 0.519432488, 0.529587317, 0.529821905, 0.557793421, 0.562190618, 0.592251179, 0.611030014, 0.619995355, 0.710151685, 0.809497463, 0.834813425, 0.913974888, 0.966634609, 0.972233795, 0.972950908 ];
-            //var ySinCos = [ 0.058030451, 0.154093159, 0.238023745, 0.588424668, 0.30823643, 0.710897663, 0.527552888, 0.069685073, 0.055485191, 0.131389179, 0.319387128, 0.212793677, 0.401301559, 0.478089423, 0.39393612, 0.301702746, 0.912314852, 0.895030989, 0.233999395, 0.121399731, 0.310668533, 0.714797546, 0.842531267, 0.286987422, 0.128383908, 0.057959329, 0.429895272, 0.129995286, 0.560237285, 0.584452711 ];
-
             var scatterDataEllipse = [ [ 'X', 'Y', 'ellipseYA', 'ellipseYB', 'ellipseYC', 'ellipseYD', 'ellipseYE', 'ellipseYF' ] ];
-            for( var i = 0; i < 30; i++ ){
-                xElp[i] = ( Math.random() - 0.5 ) * 5;
-                yElp[i] = ( Math.random() - 0.5 ) * 5;
-                scatterDataEllipse.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
-            }
-            
             var scatterDataSinCos = [ [ 'X', 'Y', 'SinCosLin', 'SinCosExp' ] ];
-            /*for( var i = 0; i < xSinCos.length; i++ ){
-                scatterDataSinCos.push( [ xSinCos[i], ySinCos[i], null, null ] );
-            }*/
-            
-            for( var i = 0; i < 30; i++ ){
-                xSinCos[i] = ( Math.random() - 0.5 ) * 7.5;
-                ySinCos[i] = ( Math.random() - 0.5 ) * 7.5;
-                scatterDataSinCos.push( [ xSinCos[i], ySinCos[i], null, null ] );
-            }
-            
-            var ellipseData = [
-                [ 0, null, 0,    null, null, null, null, null ],
-                [ 0, null, null, 0,    null, null, null, null ],
-                [ 0, null, null, null, 0,    null, null, null ],
-                [ 0, null, null, null, null, 0,    null, null ],
-                [ 0, null, null, null, null, null, 0,    null ],
-                [ 0, null, null, null, null, null, null, 0    ]
-            ];
-            
-            var sinCosData = [
-                [ 0, null, 0,    null ],
-                [ 0, null, null, 0    ]
-            ];
-            
-            var combinedDataEllipse = scatterDataEllipse.concat( ellipseData );
-            var combinedDataSinCos  = scatterDataSinCos.concat( sinCosData );
             
             var dataEllipse;
             var dataSinCos;
             
-            var optionsEllipse = {
-                title: 'X vs Y Ellipse Least Square Fit\nDrag points to change the graph',
-                hAxis: {
-                  title: 'X',
-                  viewWindow:{ max:5, min:-5 }
-                },
-                vAxis: {
-                  title: 'Y',
-                  viewWindow:{ max:5, min:-5 }
-                },
-                seriesType: 'scatter',
-                series: {
-                  1: { type: 'line' },
-                  2: { type: 'line' },
-                  3: { type: 'line' },
-                  4: { type: 'line' },
-                  5: { type: 'line' },
-                  6: { type: 'line' }
-                },
-                legend: 'none',
-                selectedPt: selectedPointEllipse
-            };
+            var optionsEllipse;
+            var optionsSinCos;
             
-            var optionsSinCos = {
-                title: 'X vs Y SinCos (linear and exp freq) Least Square Fit\nDrag points to change the graph',
-                hAxis: {
-                  title: 'X',
-                  viewWindow:{ max:5, min:-5 }
-                },
-                vAxis: {
-                  title: 'Y',
-                  viewWindow:{ max:5, min:-5 }
-                },
-                seriesType: 'scatter',
-                series: {
-                  1: { type: 'line' },
-                  2: { type: 'line' }
-                },
-                legend: 'none',
-                selectedPt: selectedPointSinCos
-            };
+            function run2DTestsWithMovablePoints(){
+                google.charts.load('current', {'packages':['corechart']});
+                google.charts.setOnLoadCallback( initChart );
+                
+                //var xSinCos = [ 0.037429811, 0.083488725, 0.137094865, 0.153523603, 0.173117839, 0.185711451, 0.187655207, 0.285912045, 0.288370293, 0.295974099, 0.300510972, 0.358703401, 0.401618916, 0.485386043, 0.510703949, 0.519432488, 0.529587317, 0.529821905, 0.557793421, 0.562190618, 0.592251179, 0.611030014, 0.619995355, 0.710151685, 0.809497463, 0.834813425, 0.913974888, 0.966634609, 0.972233795, 0.972950908 ];
+                //var ySinCos = [ 0.058030451, 0.154093159, 0.238023745, 0.588424668, 0.30823643, 0.710897663, 0.527552888, 0.069685073, 0.055485191, 0.131389179, 0.319387128, 0.212793677, 0.401301559, 0.478089423, 0.39393612, 0.301702746, 0.912314852, 0.895030989, 0.233999395, 0.121399731, 0.310668533, 0.714797546, 0.842531267, 0.286987422, 0.128383908, 0.057959329, 0.429895272, 0.129995286, 0.560237285, 0.584452711 ];
+
+                for( var i = 0; i < 30; i++ ){
+                    xElp[i] = ( Math.random() - 0.5 ) * 5;
+                    yElp[i] = ( Math.random() - 0.5 ) * 5;
+                    scatterDataEllipse.push( [ xElp[i], yElp[i], null, null, null, null, null, null ] );
+                }
+                
+                /*for( var i = 0; i < xSinCos.length; i++ ){
+                    scatterDataSinCos.push( [ xSinCos[i], ySinCos[i], null, null ] );
+                }*/
+                
+                for( var i = 0; i < 30; i++ ){
+                    xSinCos[i] = ( Math.random() - 0.5 ) * 7.5;
+                    ySinCos[i] = ( Math.random() - 0.5 ) * 7.5;
+                    scatterDataSinCos.push( [ xSinCos[i], ySinCos[i], null, null ] );
+                }
+                
+                var ellipseData = [
+                    [ 0, null, 0,    null, null, null, null, null ],
+                    [ 0, null, null, 0,    null, null, null, null ],
+                    [ 0, null, null, null, 0,    null, null, null ],
+                    [ 0, null, null, null, null, 0,    null, null ],
+                    [ 0, null, null, null, null, null, 0,    null ],
+                    [ 0, null, null, null, null, null, null, 0    ]
+                ];
+                
+                var sinCosData = [
+                    [ 0, null, 0,    null ],
+                    [ 0, null, null, 0    ]
+                ];
+                
+                var combinedDataEllipse = scatterDataEllipse.concat( ellipseData );
+                var combinedDataSinCos  = scatterDataSinCos.concat( sinCosData );
+                
+                optionsEllipse = {
+                    title: 'X vs Y Ellipse Least Square Fit\nDrag points to change the graph',
+                    width:  900,
+                    height: 500,
+                    hAxis: {
+                      title: 'X',
+                      viewWindow:{ max:5, min:-5 }
+                    },
+                    vAxis: {
+                      title: 'Y',
+                      viewWindow:{ max:5, min:-5 }
+                    },
+                    seriesType: 'scatter',
+                    series: {
+                      1: { type: 'line' },
+                      2: { type: 'line' },
+                      3: { type: 'line' },
+                      4: { type: 'line' },
+                      5: { type: 'line' },
+                      6: { type: 'line' }
+                    },
+                    legend: 'none',
+                    selectedPt: selectedPointEllipse
+                };
+                
+                optionsSinCos = {
+                    title: 'X vs Y SinCos (linear and exp freq) Least Square Fit\nDrag points to change the graph',
+                    width:  900,
+                    height: 500,
+                    hAxis: {
+                      title: 'X',
+                      viewWindow:{ max:5, min:-5 }
+                    },
+                    vAxis: {
+                      title: 'Y',
+                      viewWindow:{ max:5, min:-5 }
+                    },
+                    seriesType: 'scatter',
+                    series: {
+                      1: { type: 'line' },
+                      2: { type: 'line' }
+                    },
+                    legend: 'none',
+                    selectedPt: selectedPointSinCos
+                };
+                
+                function initChart(){
+                    dataEllipse = google.visualization.arrayToDataTable( combinedDataEllipse );
+                    dataSinCos = google.visualization.arrayToDataTable( combinedDataSinCos );
+                    
+                    // Set up a chart for 2D Ellipse variation fitting
+                    myScatterChartEllipse = new google.visualization.ChartWrapper({
+                        chartType:   'ComboChart',
+                        containerId: 'ellipseChart',
+                        dataTable:   dataEllipse,
+                        options:     optionsEllipse
+                    });
+                    
+                    // Set up a chart for 2D SinCos function fitting
+                    myScatterChartSinCos = new google.visualization.ChartWrapper({
+                        chartType:   'ComboChart',
+                        containerId: 'sinCosChart',
+                        dataTable:   dataSinCos,
+                        options:     optionsSinCos
+                    });
+                    
+                    document.getElementById("ellipseChart").addEventListener( "mousemove", handleMouseMove( myScatterChartEllipse ) );
+                    document.getElementById("ellipseChart").addEventListener( "mousedown", handleMouseDown( myScatterChartEllipse ) );
+                    document.getElementById("ellipseChart").addEventListener( "mouseup",   handleMouseUp( myScatterChartEllipse ) );
+                    
+                    document.getElementById("sinCosChart").addEventListener( "mousemove", handleMouseMove( myScatterChartSinCos ) );
+                    document.getElementById("sinCosChart").addEventListener( "mousedown", handleMouseDown( myScatterChartSinCos ) );
+                    document.getElementById("sinCosChart").addEventListener( "mouseup",   handleMouseUp( myScatterChartSinCos ) );
+                    
+                    myScatterChartEllipse.draw();
+                    myScatterChartSinCos.draw();
+                    calcEllipses();
+                    calcSinCos();
+                }
+            }
             
-            function initChart(){
-                dataEllipse = google.visualization.arrayToDataTable( combinedDataEllipse );
-                dataSinCos = google.visualization.arrayToDataTable( combinedDataSinCos );
-                
-                // Set up a chart for 2D Ellipse variation fitting
-                myScatterChartEllipse = new google.visualization.ChartWrapper({
-                    chartType:   'ComboChart',
-                    containerId: 'ellipseChart',
-                    dataTable:   dataEllipse,
-                    options:     optionsEllipse
-                });
-                
-                // Set up a chart for 2D SinCos function fitting
-                myScatterChartSinCos = new google.visualization.ChartWrapper({
-                    chartType:   'ComboChart',
-                    containerId: 'sinCosChart',
-                    dataTable:   dataSinCos,
-                    options:     optionsSinCos
-                });
-                
-                document.getElementById("ellipseChart").addEventListener( "mousemove", handleMouseMove( myScatterChartEllipse ) );
-                document.getElementById("ellipseChart").addEventListener( "mousedown", handleMouseDown( myScatterChartEllipse ) );
-                document.getElementById("ellipseChart").addEventListener( "mouseup",   handleMouseUp( myScatterChartEllipse ) );
-                
-                document.getElementById("sinCosChart").addEventListener( "mousemove", handleMouseMove( myScatterChartSinCos ) );
-                document.getElementById("sinCosChart").addEventListener( "mousedown", handleMouseDown( myScatterChartSinCos ) );
-                document.getElementById("sinCosChart").addEventListener( "mouseup",   handleMouseUp( myScatterChartSinCos ) );
-                
-                myScatterChartEllipse.draw();
-                myScatterChartSinCos.draw();
-                calcEllipses();
-                calcSinCos();
-                
+            function runLineAndPlaneFitOn3DData(){
                 //----------------------------------------------
                 // Test for Line and Plane Fitting to 3D Points
                 //----------------------------------------------
@@ -424,7 +477,9 @@
                 };
                 
                 Plotly.newPlot( 'planeChart', data, layout, { scrollZoom: false } );
-                
+            }
+            
+            function run2DPolynomialFitOn3DData(){                
                 //-----------------------------------------------------
                 // Test for 2D Polynomial Surface Fitting Over 3D Data
                 //-----------------------------------------------------
@@ -522,7 +577,9 @@
                 };
                 
                 Plotly.newPlot( 'poly2DChart', dataPoly, layoutPoly, { scrollZoom: false } );
-                
+            }
+            
+            function run2DSinCosFitsOn3DData(){
                 //-----------------------------------------------------
                 // Test for 2D Sin Cos Surface Fitting Over 3D Data
                 //-----------------------------------------------------
@@ -647,7 +704,9 @@
                 
                 Plotly.newPlot( 'sinCos2DLinChart', dataSinCos2DLin, layoutSinCos2D, { scrollZoom: false } );
                 Plotly.newPlot( 'sinCos2DExpChart', dataSinCos2DExp, layoutSinCos2D, { scrollZoom: false } );
-                
+            }
+            
+            function run3DSpherFittingOnStarData(){
                 //----------------------------
                 // Test for 3D Sphere Fitting
                 //----------------------------
@@ -916,7 +975,9 @@
                 };
                 
                 Plotly.newPlot( 'star3DChart', dataStars, layoutStars );
-                
+            }
+            
+            function run3DPolynomialFitOn4DData(){
                 //-----------------------------------------------------
                 // Test for 3D Polynomial Volume Fitting Over 4D Data
                 //-----------------------------------------------------
@@ -1092,6 +1153,81 @@
                 Plotly.newPlot( 'poly3DChart', dataPoly3D, layoutPoly3D );
             }
             
+            var xEquationParse = [];
+            var yEquationParse = [];
+            
+            var scatterDataEquationParse = [ [ 'X', 'Y', 'Equation' ] ];
+            var equationParseDataLS;
+            var combinedDataEquationParse;
+            var dataEquationParse;
+            
+            var optionsEquationParse;
+            var selectedPointEquationParse;
+            
+            var myEquationParseChart;
+            
+            function runEquationParsingFitOn2DData(){
+                //---------------------------------------
+                // Test of parsing an equation and then
+                // performing least squares on the terms
+                //---------------------------------------
+                
+                google.charts.load('current', {'packages':['corechart']});
+                google.charts.setOnLoadCallback( initEquationParseChart );
+                
+                for( var i = 0; i < 30; i++ ){
+                    xEquationParse[i] = ( Math.random() ) * 10;
+                    yEquationParse[i] = ( Math.random() ) * 10;
+                    scatterDataEquationParse.push( [ xEquationParse[i], yEquationParse[i], null ] );
+                }
+                
+                equationParseDataLS = [
+                    [ 0, null, 0,   ],
+                    [ 0, null, null ]
+                ];
+                
+                combinedDataEquationParse  = scatterDataEquationParse.concat( equationParseDataLS );
+                
+                optionsEquationParse = {
+                    title: 'Fit to a user provided equation',
+                    width:  900,
+                    height: 500,
+                    hAxis: {
+                      title: 'X',
+                      viewWindow:{ max:0, min:10 }
+                    },
+                    vAxis: {
+                      title: 'Y',
+                      viewWindow:{ max:0, min:10 }
+                    },
+                    seriesType: 'scatter',
+                    series: {
+                      1: { type: 'line' }
+                    },
+                    legend: 'none',
+                    selectedPt: selectedPointEquationParse
+                };
+                
+                function initEquationParseChart(){
+                    dataEquationParse = google.visualization.arrayToDataTable( combinedDataEquationParse );
+                    
+                    // Set up a chart for 2D SinCos function fitting
+                    myEquationParseChart = new google.visualization.ChartWrapper({
+                        chartType:   'ComboChart',
+                        containerId: 'equationParseChart',
+                        dataTable:   dataEquationParse,
+                        options:     optionsEquationParse
+                    });
+                    
+                    document.getElementById("equationParseChart").addEventListener( "mousemove", handleMouseMove( myEquationParseChart ) );
+                    document.getElementById("equationParseChart").addEventListener( "mousedown", handleMouseDown( myEquationParseChart ) );
+                    document.getElementById("equationParseChart").addEventListener( "mouseup",   handleMouseUp( myEquationParseChart ) );
+                    
+                    myEquationParseChart.draw();
+                    calcEquationParseLeastSquares();
+                }
+            }
+            
             function makeInterval( startValue, stopValue, numPoints ) {
                 var arr = [];
                 var step = (stopValue - startValue) / (numPoints - 1);
@@ -1212,6 +1348,8 @@
                         calcEllipses();
                     } else if( chart == myScatterChartSinCos ){
                         calcSinCos();
+                    } else if( chart == myEquationParseChart ){
+                        calcEquationParseLeastSquares();
                     }
                 }
             }
@@ -1248,33 +1386,45 @@
         </script>
     </head>
     <body>
-        <button onclick="testJAMA()">Test JAMA Functionality</button> 
-        <button onclick="runMagicSquareExample()">Run Magic Squares Example</button> 
-        <button onclick="runLeastSquaresTest()">Run Least Squares Test</button> 
+        <button onclick="testJAMA()">Test JAMA Functionality</button><br>
+        <button onclick="runMagicSquareExample()">Run Magic Squares Example</button><br>
+        <button onclick="runLeastSquaresTest()">Run Least Squares Test</button><br>
+        <button onclick="run2DTestsWithMovablePoints()">Run 2D Test (Ellipse and SinCos) With Moveable Points</button><br>
+        <button onclick="runLineAndPlaneFitOn3DData()">Run Line and Plane Fit on 3D Data</button><br>
+        <button onclick="run2DPolynomialFitOn3DData()">Run 2D Polynomial Fit on 3D Data</button><br>
+        <button onclick="run2DSinCosFitsOn3DData()">Run 2D SinCos Fits (Linear Freq and Exp Freq) on 3D Data</button><br>
+        <button onclick="run3DSpherFittingOnStarData()">Run 3D Ellipse Fitting on Nearby (100 LY) Stellar Data</button><br>
+        <button onclick="run3DPolynomialFitOn4DData()">Run 3D Polynomial Fit on 4D Data</button><br>
+        <button onclick="runEquationParsingFitOn2DData()">Run Arbitrary Equation Fit on 2D Data</button><br>
         <div id="output"></div>
         <div>
-            <div id="ellipseChart"  style="width: 900px; height: 500px;"></div>
+            <div id="ellipseChart"></div>
         </div>
         <div>
-            <div id="sinCosChart"  style="width: 900px; height: 500px;"></div>
+            <div id="sinCosChart"></div>
         </div><br>
         <div>
             <div id="planeChart"></div>
         </div><br>
         <div>
             <div id="poly2DChart"></div>
-        </div>
+        </div><br>
         <div>
             <div id="sinCos2DLinChart"></div>
-        </div>
+        </div><br>
         <div>
             <div id="sinCos2DExpChart"></div>
-        </div>
+        </div><br>
         <div>
             <div id="star3DChart"></div>
-        </div>
+        </div><br>
         <div>
             <div id="poly3DChart"></div>
-        </div>
+        </div><br>
+        <textarea id="inputEquation" name="inputEquation" rows="4" cols="100">AC + A * x + B*x^2 + C * x^(1+2) + D*sin(x) + E*cos(log(x*x)) + F*sin(sin(x^2)) + G*pow( 2 ,  x  ) + H*exp(x) + AA*sqrt(x) + AB*tan(0.5*x)
+        </textarea>
+        <div>
+            <div id="equationParseChart"></div>
+        </div><br>
     </body>
 </html>
