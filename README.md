@@ -138,6 +138,6 @@ An additional (extremely simple) webpage JAMA_Test.html has been included to dem
 ## Edit 1/13/2023
 - Added the ability for LeastSquares fits to arbitrary functions
 ### Example of Parsing Equation and Least Squares Fitting
-![EquationParseExample](https://i.imgur.com/isnshaj.png)
+![EquationParseExample](https://i.imgur.com/isnshajm.png)
 - Included as example in the JAMA_Test.html
 - Shows fit for an equation input by the user
