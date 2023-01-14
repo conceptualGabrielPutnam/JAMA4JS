@@ -18,8 +18,32 @@ var LeastSquares = /** @class */ (function () {
         }
         this.x = x;
         this.y = y;
-        this.z = z;
-        this.w = w;
+        if( z == null ){
+            this.z = [];
+        } else {
+            this.z = z;
+        }
+        if( w == null ){
+            this.w = [];
+        } else {
+            this.w = w;
+        }
+        
+        this.f = {
+            add: '+',
+            sub: '-',
+            div: '/',
+            mlt: '*',
+            mod: '%',
+            pow: '^',
+        };
+
+        // Create array for Order of Operation and precedence
+        this.f.orderOfOp = [
+            [ [this.f.pow] ],
+            [ [this.f.mlt], [this.f.div], [this.f.mod] ],
+            [ [this.f.add], [this.f.sub] ]
+        ];
     }
     
     /**
@@ -822,6 +846,352 @@ var LeastSquares = /** @class */ (function () {
         }
         
         return new Matrix( out );
+    };
+    
+    LeastSquares.prototype.equationParse = function ( equation_in, param, depend=-1 ){
+        var lsInputs = this.equationParseParse( equation_in, param, 0 );
+        
+        var xyzwNames = [ "x", "y", "z", "w" ];
+        var xyzwLen = [ this.x.length, this.y.length, this.z.length, this.w.length ];
+        // If no dependent variable specified, then choose the last variable with a positive length
+        if( depend == -1 ){
+            var dependIndex = xyzwLen.findLastIndex( (element) => element > 0 );
+            depend = xyzwNames[ dependIndex ];
+        }
+        
+        var maxXYZW = Math.max.apply( Math, xyzwLen );
+        var xyzw = {};
+        
+        var A = [];
+        var B = [];
+
+        for( var xyzwInd = 0; xyzwInd < maxXYZW; xyzwInd++ ){
+            xyzw[ "x" ] = this.x[ xyzwInd ];
+            xyzw[ "y" ] = this.y[ xyzwInd ];
+            xyzw[ "z" ] = this.z[ xyzwInd ];
+            xyzw[ "w" ] = this.w[ xyzwInd ];
+            
+            A[xyzwInd] = [];	
+            B[xyzwInd] = [];	
+            B[xyzwInd][0] = xyzw[ depend ];
+            
+            for( var lsI = 0; lsI < lsInputs.length; lsI++ ){
+                A[xyzwInd].push( Number( this.equationParseCalcInput( lsInputs[lsI], xyzw ) ) );
+            }
+            //document.getElementById("output").innerHTML += "<br>x: " + xyzw.x + " y: " + xyzw.y + " z: " + xyzw.z + " w: " + xyzw.w + " = " + result.toString();
+        }
+        	
+        A = new Matrix( A );	
+        B = new Matrix( B );	
+        var res = A.solve(B);	
+
+        for( var key in param ){
+            var value = param[ key ];
+            param[ key ] = res.A[value][0];
+        }
+        
+        return res;
+    };
+    
+    LeastSquares.prototype.equationParseEvaluate = function ( equation_in, param, xyzw_in, depend=-1 ){
+        // Find a set of equation inputs with the parameter values replaced
+        var lsInputs = this.equationParseParse( equation_in, param, 1 );
+        
+        if( xyzw_in.y == undefined ){ xyzw_in.y = []; }
+        if( xyzw_in.z == undefined ){ xyzw_in.z = []; }
+        if( xyzw_in.w == undefined ){ xyzw_in.w = []; }
+        
+        var xyzwNames = [ "x", "y", "z", "w" ];
+        var xyzwLen = [ xyzw_in.x.length, xyzw_in.y.length, xyzw_in.z.length, xyzw_in.w.length ];
+        // If no dependent variable specified, then choose the last variable with a positive length
+        if( depend == -1 ){
+            var dependIndex = xyzwLen.findLastIndex( (element) => element > 0 );
+            depend = xyzwNames[ dependIndex ];
+        }
+        var maxXYZW = Math.max.apply( Math, xyzwLen );
+        
+        var xyzw = {};
+
+        var res = [];
+        for( var xyzwInd = 0; xyzwInd < maxXYZW; xyzwInd++ ){
+            xyzw[ "x" ] = xyzw_in.x[ xyzwInd ];
+            xyzw[ "y" ] = xyzw_in.y[ xyzwInd ];
+            xyzw[ "z" ] = xyzw_in.z[ xyzwInd ];
+            xyzw[ "w" ] = xyzw_in.w[ xyzwInd ];
+            
+            res.push( 0 );
+            for( var lsI = 0; lsI < lsInputs.length; lsI++ ){
+                res[xyzwInd] += ( Number( this.equationParseCalcInput( lsInputs[lsI], xyzw ) ) );
+            }
+        }
+        
+        return res;
+    };
+        
+    //----------------------------------------
+    // Support functions for equation parsing
+    //----------------------------------------
+    
+    LeastSquares.prototype.equationParseParse = function( equation_in, param, evaluation ){
+        // Answers From:
+        // https://stackoverflow.com/questions/650022/how-do-i-split-a-string-with-multiple-separators-in-javascript
+        // https://stackoverflow.com/questions/39647555/how-to-split-string-while-ignoring-portion-in-parentheses
+        // https://stackoverflow.com/questions/3409520/javascript-get-only-the-variable-part-of-a-regex-match
+        // https://stackoverflow.com/questions/1234712/javascript-replace-with-reference-to-matched-group
+        // https://stackoverflow.com/questions/6479236/calculate-string-value-in-javascript-not-using-eval
+        // Get rid of whitespace
+        var strNoWhitespace = equation_in.replace( /\s+/g, '' );
+        // Split all the portions into seperate components (based on +/- signs outside parentheses)
+        // Thoughts on seperating text numbers /[^0-9]+|[0-9]+/g
+        var parenDepth = 0;
+        var parenMatchesArr = [];
+        var strParenRepl = strNoWhitespace;
+        while( strParenRepl.match( /\(([^()]*)\)/g ) ){
+            parenMatchesArr[parenDepth] = strParenRepl.match( /\(([^()]*)\)/g );
+            var replStr = "REPLACESTR" + parenDepth;
+            strParenRepl = strParenRepl.replace( /\(([^()]*)\)/g, replStr );
+            //console.log( parenMatchesArr[parenDepth] );
+            //console.log( strParenRepl );
+            parenDepth++;
+        }
+        var strMinusRepl = strParenRepl.replace( /\-(?![^(]*\))/g, '+-' );
+        var lsInputs = strMinusRepl.split( /\+(?![^(]*\))/ );
+        if( lsInputs[0] == "" ){
+            lsInputs.shift();
+        }
+
+        var pRI = [];
+        for( var parDep = 0; parDep < parenDepth; parDep++ ){
+            pRI.push( 0 );
+        }
+        //console.log( "pRI: " + pRI.toString() );
+        for( var lsI = 0; lsI < lsInputs.length; lsI++ ){
+            // First, return any parentheses taken out
+            for( var parDep = parenDepth-1; parDep >= 0; parDep-- ){
+                var replStr = "REPLACESTR" + parDep;
+                var re = new RegExp( replStr,"" );
+                while( lsInputs[lsI].match( re ) ){
+                    //console.log( "before: " + lsInputs[lsI] + " pRI: " + pRI + " parDep: " + parDep );
+                    lsInputs[lsI] = lsInputs[lsI].replace( re, parenMatchesArr[ parDep ][ pRI[parDep] ]  );
+                    pRI[parDep]++;
+                    //console.log( "after: " + lsInputs[lsI] + " pRI: " + pRI + " parDep: " + parDep );
+                }
+            }
+            if( evaluation ){
+                // Check each of the calculated parameters for a match in this input
+                var keyArray = Object.keys(param);
+                // From: https://stackoverflow.com/questions/10630766/how-to-sort-an-array-based-on-the-length-of-each-element
+                keyArray.sort( function( a, b ){
+                    // ASC  -> a.length - b.length
+                    // DESC -> b.length - a.length
+                    return b.length - a.length;
+                });
+                for( var keyIndex in keyArray ){
+                    var key = keyArray[ keyIndex ];
+                    var reKey = new RegExp( '(\\-?)(' + key + ')(\\**)(.*)' );
+                    if( lsInputs[lsI].match( reKey ) ){
+                        // If we find a match, replace it with the calculated value
+                        // then stop checking (should only be 1 param per input)
+                        var value = param[ key ];
+                        var replStr = RegExp.$1 + value + RegExp.$3 + RegExp.$4;
+                        lsInputs[lsI] = lsInputs[lsI].replace( reKey, replStr );
+                        break;
+                    }
+                }
+            } else {
+                // Find the parameter that's being calculated and store it
+                var curParam = lsInputs[lsI].match( /(\-?)([A-Za-z]+)\**(.*)/ )[2];
+                param[ curParam ] = lsI;
+                // Erase the parameter from the input
+                if( lsInputs[lsI].match( /(\-?)([A-Za-z]+)\**(.*)/ ) ){
+                    //console.log( RegExp.$1 + " " + RegExp.$2 + " " + RegExp.$3 + " " + RegExp.$4 );
+                    var replStr;
+                    if( RegExp.$3 == "" ){
+                        replStr = RegExp.$1 + 1;
+                    } else {
+                        replStr = RegExp.$1 + RegExp.$3;
+                    }
+                    lsInputs[lsI] = lsInputs[lsI].replace( /(\-?)([A-Za-z]+)\**(.*)/, replStr );
+                }
+            }
+            // clean up unnecessary characters
+            var matches = lsInputs[lsI].match( /(sqrt|sin|cos|tan|exp|pow|log|[0-9xyzwEe%\^*\/()\-+.,])/g );
+            lsInputs[lsI] = matches.join( '' );
+        }
+        return lsInputs;
+    };
+
+    LeastSquares.prototype.equationParseCalcInput = function( input, xyzw ){
+        // exp(x)*(2*x)
+        // exp(2*x)
+        // exp(2*(2*x))
+        // exp( pow(2-x,x+2))
+        // x^-2
+        var inputMatch;
+        var reGen = /(sqrt|sin|cos|tan|exp|pow|log)*\(([^()]*)\)/;
+        var reXYZW  = /([xyzw])/;
+        while( inputMatch = input.match( reGen ) ){
+            //console.log( "inputMatch: " + inputMatch );
+            var mathFunc;
+            // Handle the case for pow( number, number )
+            if( inputMatch[1] == "pow" ){
+                var powHalves = inputMatch[2].split( "," );
+                //console.log( powHalves.toString() );
+                var re = /((\d*\.?\d+|\d+)([Ee][+-]?\d+)?|[xyzw])([+*/^%-])(-?(\d*\.?\d+|\d+)([Ee][+-]?\d+)?|-?[xyzw])/;
+                if( powHalves[0].match( re ) ){
+                    //console.log( powHalves[0] );
+                    powHalves[0] = this.equationParseCalcInputNoParentheses( powHalves[0], xyzw );
+                } else {
+                    if( powHalves[0].match( reXYZW ) ){
+                        powHalves[0] = powHalves[0].replace( reXYZW, xyzw[ RegExp.$1 ] );
+                    }
+                }
+                if( powHalves[1].match( re ) ){
+                    //console.log( powHalves[1] );
+                    powHalves[1] = this.equationParseCalcInputNoParentheses( powHalves[1], xyzw );
+                } else {
+                    if( powHalves[1].match( reXYZW ) ){
+                        powHalves[1] = powHalves[1].replace( reXYZW, xyzw[ RegExp.$1 ] );
+                    }
+                }
+                var output = Math.pow( powHalves[0], powHalves[1] );
+                //console.log( powHalves[0] + " " + powHalves[1] + " " + output );
+                input = input.replace( reGen, output );
+            // Handle the cases for sqrt|sin|cos|tan|exp|log( number )
+            } else if( mathFunc = inputMatch[0].match( /(sqrt|sin|cos|tan|exp|log)/ ) ){
+                var re = /((\d*\.?\d+|\d+)([Ee][+-]?\d+)?|[xyzw])([+*/^%-])(-?(\d*\.?\d+|\d+)([Ee][+-]?\d+)?|-?[xyzw])/;
+                if( inputMatch[2].match( re ) ){
+                    inputMatch[2] = this.equationParseCalcInputNoParentheses( inputMatch[2], xyzw );
+                }
+                var output;
+                if( inputMatch[2].match( reXYZW ) ){
+                    inputMatch[2] = inputMatch[2].replace( reXYZW, xyzw[ RegExp.$1 ] );
+                }
+                switch( mathFunc[0] ){
+                    case "sqrt":
+                        output = Math.sqrt( inputMatch[2] );
+                        break;
+                    case "sin":
+                        output = Math.sin( inputMatch[2] );
+                        break;
+                    case "cos":
+                        output = Math.cos( inputMatch[2] );
+                        break;
+                    case "tan":
+                        output = Math.tan( inputMatch[2] );
+                        break;
+                    case "exp":
+                        output = Math.exp( inputMatch[2] );
+                        break;
+                    case "log":
+                        output = Math.log( inputMatch[2] );
+                        break;
+                    default:
+                        null;
+                }
+                //console.log( mathFunc + " " + inputMatch[2] + " " + output );
+                input = input.replace( reGen, output );
+            // Handle cases where there's still basic math operation parentheses after handling function parentheses
+            } else {
+                var output;
+                var re = /((\d*\.?\d+|\d+)([Ee][+-]?\d+)?|[xyzw])([+*/^%-])(-?(\d*\.?\d+|\d+)([Ee][+-]?\d+)?|-?[xyzw])/;
+                if( inputMatch[2].match( re ) ){
+                    output = this.equationParseCalcInputNoParentheses( inputMatch[2], xyzw );
+                } else {
+                    output = inputMatch[2];
+                    if( output.match( reXYZW ) ){
+                        output = output.replace( reXYZW, xyzw[ RegExp.$1 ] );
+                    }
+                }
+                input = input.replace( reGen, output );
+            }
+            //console.log( "input: " + input );
+            //calcInput( inputMatch[1] );
+        }
+        
+        var output;
+        var reNoParenMath = /((\d*\.?\d+|\d+)([Ee][+-]?\d+)?|[xyzw])([+*/^%-])(-?(\d*\.?\d+|\d+)([Ee][+-]?\d+)?|-?[xyzw])/;
+        // Deal with any remaining basic math operations
+        if( input.match( reNoParenMath ) ){
+            output = this.equationParseCalcInputNoParentheses( input, xyzw );
+            //input = input.replace( reNoParenMath, output );
+        } else {
+            output = input;
+            if( output.match( reXYZW ) ){
+                output = output.replace( reXYZW, xyzw[ RegExp.$1 ] );
+            }
+        }
+        if( output.match( /--/ ) ){
+            output = output.replace( /--/, "" );
+        }
+        //console.log( "output: " + output );
+        return output;
+    };
+
+    LeastSquares.prototype.equationParseCalcInputNoParentheses = function( input, xyzw ){
+        for( var i = 0, n = this.f.orderOfOp.length; i < n; i++ ){
+            for( var op = 0, m = this.f.orderOfOp[i].length; op < m; op++ ){
+                // Regular Expression to look for operators between floating numbers or integers
+                var re;
+                if( i == 2 ){
+                    // For addition and subtraction need to account for optional leading negative (-)
+                    re = new RegExp('(^[-+]?(?:\\d*\\.?\\d+|\\d+)(?:[Ee][+-]?\\d+)?|[xyzw])([\\' + this.f.orderOfOp[i][op] + '])(-?(?:\\d*\\.?\\d+|\\d+)(?:[Ee][+-]?\\d+)?|-?[xyzw])');
+                } else {
+                    re = new RegExp('((?:\\d*\\.?\\d+|\\d+)(?:[Ee][+-]?\\d+)?|[xyzw])([\\' + this.f.orderOfOp[i][op] + '])(-?(?:\\d*\\.?\\d+|\\d+)(?:[Ee][+-]?\\d+)?|-?[xyzw])');
+                }
+                
+                //re = new RegExp('(\\d+\\.?\\d*|[xyzw])([\\' + f.orderOfOp[i][op] + '])(\\-?\\d+\\.?\\d*|\\-?[xyzw])');
+                re.lastIndex = 0; // take precautions and reset re starting pos
+                // Loop while there is still calculation for level of precedence
+                while( re.test(input) ){
+                    output = this.equationParse_calculate( RegExp.$1, RegExp.$2, RegExp.$3, xyzw );
+                    if( isNaN(output) || !isFinite(output) ) 
+                        return output; // exit early if not a number
+                    input = input.replace( re, output );
+                }
+            }
+        }
+        
+        if( input.match( /--/ ) ){
+            input = input.replace( /--/, "" );
+        }
+
+        return input;
+    };
+
+    LeastSquares.prototype.equationParse_calculate = function( a, op, b, xyzw ){
+        if( a == "x" ){ a = xyzw.x; }
+        if( a == "y" ){ a = xyzw.y; }
+        if( a == "z" ){ a = xyzw.z; }
+        if( a == "w" ){ a = xyzw.w; }
+        if( b == "x" ){ b = xyzw.x; }
+        if( b == "y" ){ b = xyzw.y; }
+        if( b == "z" ){ b = xyzw.z; }
+        if( b == "w" ){ b = xyzw.w; }
+        a = a * 1;
+        b = b * 1;
+        switch (op) {
+            case this.f.add:
+                return a + b;
+                break;
+            case this.f.sub:
+                return a - b;
+                break;
+            case this.f.div:
+                return a / b;
+                break;
+            case this.f.mlt:
+                return a * b;
+                break;
+            case this.f.mod:
+                return a % b;
+                break;
+            case this.f.pow:
+                return Math.pow(a, b);
+                break;
+            default:
+                null;
+        }
     };
     
     LeastSquares.prototype.sphere3D = function ( sphereParam = -1 ){
