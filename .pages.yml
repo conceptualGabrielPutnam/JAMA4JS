@@ -28,7 +28,7 @@ content:
     type: file
     fields:
       - name: title
-        label: Website title
+        label: Website title slightly different
         type: string
       - name: description
         label: Website description
