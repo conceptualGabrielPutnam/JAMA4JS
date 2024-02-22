@@ -1,11 +1,11 @@
 media:
-  input: src/media
-  output: /media
+  input: media
+  output: pagesOut/media
 content:
   - name: posts
     label: Posts
     type: collection
-    path: 'src/posts'
+    path: 'posts'
     view:
       fields: [ title, published, date ]
     fields:
@@ -24,7 +24,7 @@ content:
         type: rich-text
   - name: site
     label: Site settings
-    path: src/_data/site.json
+    path: pagesData/site.json
     type: file
     fields:
       - name: title
