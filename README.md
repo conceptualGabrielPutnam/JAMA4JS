@@ -4,6 +4,9 @@ The JAMA Linear Algebra package translated for use with Javascript
 - This repository represents a conversion of the JAMA linear algebra library for use with Javascript.
 - The leastSquares folder contains a number of optional utility functions for performing Least Squares regression over various dimensional datasets.
 
+# Interactive Demo
+A live demo of the library can be tried at: https://rawcdn.githack.com/conceptualGabrielPutnam/JAMA4JS/253f01110a14750c173cf4568053602f0711733f/JAMA_Test.html
+
 ### Translation Source
 The initial commit of this library was created from the JAMA archive located at:
 - https://math.nist.gov/javanumerics/jama/
